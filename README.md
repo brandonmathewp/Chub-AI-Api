@@ -1,2115 +1,1082 @@
-# Rostro API
-
-Rostro endpoints provide AI-powered features for multimedia generation, character chat management, and content organization. For use as an OpenAI mimic, use the URL: 'https://api.rostro.dev/v1'. For use as an MCP server, use the URL: 'https://proto.rostro.dev/mcp'.
-
-## Table of Contents
-
-- [Base URL](#base-url)
-- [Authentication](#authentication)
-- [Endpoints](#endpoints)
-  - [Tags & Metadata](#tags--metadata)
-    - [POST /tags](#post-tags)
-    - [POST /api/tags/{project_id}/{tagname}](#post-apitagsproject_idtagname)
-    - [DELETE /api/tags/{project_id}/{tagname}](#delete-apitagsproject_idtagname)
-  - [Projects & Metadata](#projects--metadata)
-    - [PUT /api/project/{project_id}/metadata](#put-apiprojectproject_idmetadata)
-  - [Gallery](#gallery)
-    - [GET /api/gallery](#get-apigallery)
-    - [GET /api/gallery/project/{project_id}](#get-apigalleryprojectproject_id)
-    - [POST /api/gallery/upload](#post-apigalleryupload)
-    - [DELETE /api/gallery/{uuid}](#delete-apigalleryuuid)
-  - [Lore System](#lore-system)
-    - [POST /lore](#post-lore)
-    - [POST /lore/item](#post-loreitem)
-    - [GET /lore/items](#get-loreitems)
-    - [DELETE /lore/{owner_id}/item/{uuid}](#delete-loreowner_iditemuuid)
-  - [Search](#search)
-    - [GET /search](#get-search)
-    - [POST /search](#post-search)
-    - [POST /minisearch](#post-minisearch)
-  - [Imagine (Media Generation)](#imagine-media-generation)
-    - [POST /imagine](#post-imagine)
-    - [POST /imagine/history](#post-imaginehistory)
-    - [POST /imagine/history/delete](#post-imaginehistorydelete)
-  - [Ratings](#ratings)
-    - [GET /api/project/{project_id}/ratings](#get-apiprojectproject_idratings)
-    - [POST /api/project/{project_id}/ratings/disable](#post-apiprojectproject_idratingsdisable)
-    - [POST /api/project/{project_id}/ratings/enable](#post-apiprojectproject_idratingsEnable)
-    - [POST /api/project/{project_id}/rate](#post-apiprojectproject_idrate)
-  - [User Account Management](#user-account-management)
-    - [GET /api/account](#get-apiaccount)
-    - [DELETE /api/account](#delete-apiaccount)
-    - [POST /api/account/block/{block_type}/{name}](#post-apiaccountblockblock_typename)
-    - [DELETE /api/account/block/{block_type}/{name}](#delete-apiaccountblockblock_typename)
-    - [POST /api/account/blacklist](#post-apiaccountblacklist)
-    - [POST /api/account/blacklist/remove](#post-apiaccountblacklistremove)
-    - [POST /api/account/sort/{order}](#post-apiaccountsortorder)
-    - [GET /api/self](#get-apiself)
-  - [Social Features](#social-features)
-    - [DELETE /follow/tag/{tagname}](#delete-followtagtagname)
-    - [POST /follow/tag/{tagname}](#post-followtagtagname)
-    - [DELETE /api/follow/{username}](#delete-apifollowusername)
-    - [POST /api/follow/{username}](#post-apifollowusername)
-    - [POST /api/follows/{username}](#post-apifollowsusername)
-    - [GET /api/follows/{username}](#get-apifollowsusername)
-    - [GET /api/followers/{username}](#get-apifollowersusername)
-    - [GET /api/timeline/v1](#get-apitimelinev1)
-  - [User Profiles](#user-profiles)
-    - [GET /api/users/{username}](#get-apiusersusername)
-    - [GET /api/leaderboard/v1](#get-apileaderboardv1)
-    - [GET /atproto/{username}](#get-atprotousername)
-  - [Character Chat](#character-chat)
-    - [POST /api/core/characters](#post-apicorecharacters)
-    - [DELETE /api/core/characters/link/{username}/{pathname}/lorebook/{project_id}](#delete-apicorecharacterslinkusernamepatnamelorebookproject_id)
-    - [POST /api/core/characters/link/{username}/{pathname}/lorebook/{project_id}](#post-apicorecharacterslinkusernamepatnamelorebookproject_id)
-    - [PUT /api/core/characters/{username}/{pathname}](#put-apicorecharactersusernamepathname)
-  - [User Settings](#user-settings)
-    - [POST /api/self/username](#post-apiselfusername)
-    - [POST /api/check/username](#post-apicheckusername)
-    - [POST /config/{config_id}/{sub_id}](#post-configconfig_idsub_id)
-    - [DELETE /config/{config_id}/{sub_id}](#delete-configconfig_idsub_id)
-    - [POST /config](#post-config)
-    - [DELETE /config](#delete-config)
-  - [Utilities](#utilities)
-    - [POST /api/infer/emotion](#post-apiinferemotion)
-- [Error Handling](#error-handling)
-- [Schemas](#schemas)
-  - [Core Response Schemas](#core-response-schemas)
-  - [Request Schemas](#request-schemas)
-  - [Enum Schemas](#enum-schemas)
-  - [Complex Schemas](#complex-schemas)
-- [Notes](#notes)
-- [Additional Information](#additional-information)
-
-## Base URL
-
-```
-https://api.rostro.dev
-```
-
-## Authentication
-
-The Rostro API supports three authentication methods:
-
-1. **CH-API-KEY**: API Key authentication using the `CH-API-KEY` header
-2. **Authorization**: Bearer token authentication using the `Authorization` header
-3. **samwise**: Custom authentication scheme
-
-### Authentication Header Format
-
-```http
+> Rostro endpoints. For use as an OpenAI mimic, use the URL: https://api.rostro.dev/v1. For use as an MCP server, use the URL: https://proto.rostro.dev/mcp.
+> 
+Base URL
+ * OpenAI Mimic: https://api.rostro.dev/v1
+ * MCP Server: https://proto.rostro.dev/mcp
+ * Standard API: https://api.rostro.dev (Implied from context, though the spec focuses on the mimic URLs)
+Authentication
+The API utilizes API Keys and Bearer tokens for security. Most endpoints require one of the following security schemes:
+ * Authorization Header: Standard bearer token or API key.
+ * CH-API-KEY Header: Custom header for API key.
+Example Request Header:
 Authorization: Bearer <your_token>
-```
 
-or
-
-```http
+OR
 CH-API-KEY: <your_api_key>
-```
 
----
-
-## Endpoints
-
-### Tags & Metadata
-
-#### POST /tags
-
-**Description**: Get all tags with counts, optionally by namespace.
-
-**Tags**: Read-Only
-
-**Parameters**: None (query parameters in request body)
-
-**Request Body**:
-
+Endpoints
+POST /tags
+Description: Get all tags with counts, optionally by namespace.
+Request Body: TagsQuery
 | Field | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| (Refer to TagsQuery schema) | TagsQuery | Yes | Query parameters for tags |
-
-**Example Request**:
-
-```bash
-curl -X POST https://api.rostro.dev/tags \
-  -H "Authorization: Bearer <token>" \
+|---|---|---|---|
+| namespace | string | No | Optional namespace filter. |
+Example Request:
+curl -X POST "https://api.rostro.dev/tags" \
   -H "Content-Type: application/json" \
-  -d '{}'
-```
+  -d '{
+    "namespace": "general"
+  }'
 
-**Example Response**:
-
-```json
+Example Response:
 {
-  "tags": []
-}
-```
-
----
-
-### Projects & Metadata
-
-#### PUT /api/project/{project_id}/metadata
-
-**Description**: Update the metadata for this project.
-
-**Tags**: Projects
-
-**Parameters**:
-
-| Name | In (Path/Query) | Type | Required | Description |
-| :--- | :--- | :--- | :--- | :--- |
-| project_id | Path | integer | Yes | Project ID (minimum: 1, example: 172700) |
-
-**Request Body**:
-
-| Field | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| (Refer to CommonMetadataUpdate schema) | CommonMetadataUpdate | Yes | Metadata update information |
-
-**Example Request**:
-
-```bash
-curl -X PUT https://api.rostro.dev/api/project/172700/metadata \
-  -H "Authorization: Bearer <token>" \
-  -H "Content-Type: application/json" \
-  -d '{}'
-```
-
-**Example Response**:
-
-```json
-{
-  "message": "success"
-}
-```
-
----
-
-### Gallery
-
-#### GET /api/gallery
-
-**Description**: Fetch the gallery of all images for all projects.
-
-**Tags**: Projects
-
-**Parameters**:
-
-| Name | In (Path/Query) | Type | Required | Description |
-| :--- | :--- | :--- | :--- | :--- |
-| nsfw | Query | boolean | No | Include NSFW content (default: true) |
-| page | Query | integer | No | Page number (default: 1) |
-| limit | Query | integer | No | Results per page (default: 24) |
-| count | Query | boolean | No | Whether to return the total count or not (default: true) |
-
-**Example Request**:
-
-```bash
-curl -X GET "https://api.rostro.dev/api/gallery?page=1&limit=24&nsfw=true&count=true" \
-  -H "Authorization: Bearer <token>"
-```
-
-**Example Response**:
-
-```json
-{
-  "items": [],
-  "total": 0,
-  "page": 1,
-  "limit": 24
-}
-```
-
----
-
-#### GET /api/gallery/project/{project_id}
-
-**Description**: Fetch the gallery of images for this project.
-
-**Tags**: Projects
-
-**Parameters**:
-
-| Name | In (Path/Query) | Type | Required | Description |
-| :--- | :--- | :--- | :--- | :--- |
-| project_id | Path | integer | Yes | Project ID (minimum: 1, example: 172700) |
-| nsfw | Query | boolean | No | Include NSFW content (default: true) |
-| page | Query | integer | No | Page number (default: 1) |
-| limit | Query | integer | No | Results per page (default: 24) |
-| count | Query | boolean | No | Whether to return the total count or not (default: true) |
-
-**Example Request**:
-
-```bash
-curl -X GET "https://api.rostro.dev/api/gallery/project/172700?page=1&limit=24" \
-  -H "Authorization: Bearer <token>"
-```
-
-**Example Response**:
-
-```json
-{
-  "items": [],
-  "total": 0
-}
-```
-
----
-
-#### POST /api/gallery/upload
-
-**Description**: Upload to the gallery of images.
-
-**Tags**: Projects
-
-**Parameters**: None (data in request body)
-
-**Request Body**:
-
-| Field | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| (Refer to ImageUploadRequest schema) | ImageUploadRequest | Yes | Image upload data |
-
-**Example Request**:
-
-```bash
-curl -X POST https://api.rostro.dev/api/gallery/upload \
-  -H "Authorization: Bearer <token>" \
-  -H "Content-Type: application/json" \
-  -d '{}'
-```
-
-**Example Response**:
-
-```json
-{
-  "uuid": "3e41a43b-4ffc-41dd-8ad8-5cb6846b9160",
-  "url": "https://example.com/image.jpg"
-}
-```
-
----
-
-### Utilities
-
-#### POST /api/infer/emotion
-
-**Description**: Infer the emotion of a string.
-
-**Tags**: Unstable
-
-**Parameters**: None (data in request body)
-
-**Request Body**:
-
-| Field | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| (Refer to EmotionRequest schema) | EmotionRequest | Yes | Text to analyze for emotion |
-
-**Example Request**:
-
-```bash
-curl -X POST https://api.rostro.dev/api/infer/emotion \
-  -H "Authorization: Bearer <token>" \
-  -H "Content-Type: application/json" \
-  -d '{"text": "I am very happy today!"}'
-```
-
-**Example Response**:
-
-```json
-{
-  "emotion": "joy",
-  "confidence": 0.95
-}
-```
-
----
-
-#### DELETE /api/gallery/{uuid}
-
-**Description**: Delete an image from the gallery.
-
-**Tags**: Projects
-
-**Parameters**:
-
-| Name | In (Path/Query) | Type | Required | Description |
-| :--- | :--- | :--- | :--- | :--- |
-| uuid | Path | string | Yes | Image UUID (example: "3e41a43b-4ffc-41dd-8ad8-5cb6846b9160") |
-| projectId | Query | integer | No | Optional. The project to dissociate it from. Used when the requester does not own the image, but owns the associated project |
-
-**Example Request**:
-
-```bash
-curl -X DELETE "https://api.rostro.dev/api/gallery/3e41a43b-4ffc-41dd-8ad8-5cb6846b9160" \
-  -H "Authorization: Bearer <token>"
-```
-
-**Example Response**:
-
-```json
-{
-  "message": "success"
-}
-```
-
----
-
-#### POST /api/tags/{project_id}/{tagname}
-
-**Description**: Add a tag to this entity.
-
-**Tags**: Unstable
-
-**Parameters**:
-
-| Name | In (Path/Query) | Type | Required | Description |
-| :--- | :--- | :--- | :--- | :--- |
-| project_id | Path | integer | Yes | Project ID (minimum: 1, example: 172700) |
-| tagname | Path | string | Yes | Tag name (example: "HOT") |
-
-**Example Request**:
-
-```bash
-curl -X POST https://api.rostro.dev/api/tags/172700/HOT \
-  -H "Authorization: Bearer <token>"
-```
-
-**Example Response**:
-
-```json
-{
-  "message": "success"
-}
-```
-
----
-
-#### DELETE /api/tags/{project_id}/{tagname}
-
-**Description**: Remove a tag from this entity.
-
-**Tags**: Unstable
-
-**Parameters**:
-
-| Name | In (Path/Query) | Type | Required | Description |
-| :--- | :--- | :--- | :--- | :--- |
-| project_id | Path | integer | Yes | Project ID (minimum: 1, example: 172700) |
-| tagname | Path | string | Yes | Tag name (example: "HOT") |
-
-**Example Request**:
-
-```bash
-curl -X DELETE https://api.rostro.dev/api/tags/172700/HOT \
-  -H "Authorization: Bearer <token>"
-```
-
-**Example Response**:
-
-```json
-{
-  "message": "success"
-}
-```
-
----
-
-### User Profiles
-
-#### GET /api/users/{username}
-
-**Description**: Get the profile for this user.
-
-**Tags**: Read-Only
-
-**Parameters**:
-
-| Name | In (Path/Query) | Type | Required | Description |
-| :--- | :--- | :--- | :--- | :--- |
-| username | Path | string | Yes | Username (example: "You") |
-| nsfw | Query | string | No | true or false |
-| nsfl | Query | boolean | No | true or false (default: true) |
-| exclude_mine | Query | boolean | No | Whether to exclude your private and unlisted projects (default: false) |
-| include_projects | Query | boolean | No | Whether to also fetch their projects (default: true) |
-
-**Example Request**:
-
-```bash
-curl -X GET "https://api.rostro.dev/api/users/You?include_projects=true" \
-  -H "Authorization: Bearer <token>"
-```
-
-**Example Response**:
-
-```json
-{
-  "username": "You",
-  "projects": []
-}
-```
-
----
-
-#### GET /api/leaderboard/v1
-
-**Description**: Get the user leaderboard.
-
-**Tags**: Read-Only
-
-**Parameters**:
-
-| Name | In (Path/Query) | Type | Required | Description |
-| :--- | :--- | :--- | :--- | :--- |
-| order_by | Query | LeaderSortEnum | No | The field to order by (default: "avg_msgs_chat") |
-
-**Example Request**:
-
-```bash
-curl -X GET "https://api.rostro.dev/api/leaderboard/v1?order_by=avg_msgs_chat" \
-  -H "Authorization: Bearer <token>"
-```
-
-**Example Response**:
-
-```json
-{
-  "leaders": []
-}
-```
-
----
-
-### Lore System
-
-#### POST /lore
-
-**Description**: Make a RAG lore request.
-
-**Tags**: Lore
-
-**Parameters**: None (data in request body)
-
-**Request Body**:
-
-| Field | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| (Refer to LoreQuery schema) | LoreQuery | Yes | Lore query parameters |
-
-**Example Request**:
-
-```bash
-curl -X POST https://api.rostro.dev/lore \
-  -H "Authorization: Bearer <token>" \
-  -H "Content-Type: application/json" \
-  -d '{}'
-```
-
-**Example Response**:
-
-```json
-{
-  "results": []
-}
-```
-
----
-
-#### POST /lore/item
-
-**Description**: Add an unstructured item.
-
-**Tags**: Lore
-
-**Parameters**: None (multipart form data)
-
-**Request Body**:
-
-| Field | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| (Refer to Body_add_lore_item_lore_item_post schema) | multipart/form-data | Yes | Lore item data |
-
-**Example Request**:
-
-```bash
-curl -X POST https://api.rostro.dev/lore/item \
-  -H "Authorization: Bearer <token>" \
-  -F "file=@lore_item.txt"
-```
-
-**Example Response**:
-
-```json
-{
-  "uuid": "1b6c5288-731c-4345-a756-1b02ee8e080f",
-  "content": "..."
-}
-```
-
----
-
-#### GET /lore/items
-
-**Description**: Get unstructured items for these owners.
-
-**Tags**: Read-Only
-
-**Parameters**: None (data in request body)
-
-**Request Body**:
-
-| Field | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| (Refer to LoreFetch schema) | LoreFetch | Yes | Owner IDs to fetch lore items for |
-
-**Example Request**:
-
-```bash
-curl -X GET https://api.rostro.dev/lore/items \
-  -H "Authorization: Bearer <token>" \
-  -H "Content-Type: application/json" \
-  -d '{"owner_ids": [2108776]}'
-```
-
-**Example Response**:
-
-```json
-{
-  "items": []
-}
-```
-
----
-
-#### DELETE /lore/{owner_id}/item/{uuid}
-
-**Description**: Remove an unstructured item.
-
-**Tags**: Lore
-
-**Parameters**:
-
-| Name | In (Path/Query) | Type | Required | Description |
-| :--- | :--- | :--- | :--- | :--- |
-| uuid | Path | string | Yes | Item UUID (example: "1b6c5288-731c-4345-a756-1b02ee8e080f") |
-| owner_id | Path | integer | Yes | Owner ID (minimum: 1, example: 2108776) |
-
-**Example Request**:
-
-```bash
-curl -X DELETE https://api.rostro.dev/lore/2108776/item/1b6c5288-731c-4345-a756-1b02ee8e080f \
-  -H "Authorization: Bearer <token>"
-```
-
-**Example Response**:
-
-```json
-{
-  "message": "success"
-}
-```
-
----
-
-### Search
-
-#### GET /search
-
-**Description**: Do Internal Search
-
-**Tags**: None specified
-
-**Parameters**:
-
-| Name | In (Path/Query) | Type | Required | Description |
-| :--- | :--- | :--- | :--- | :--- |
-| search | Query | string | No | Full-text search of definitions (max 300 chars) |
-| exact_search | Query | string | No | Full-text exact search of definitions (max 300 chars) |
-| name_like | Query | string | No | Simple name search (max 200 chars) |
-| first | Query | integer | No | Number of results per page (max 500, default: 40) |
-| min_users_chatted | Query | integer | No | Minimum number of users chatted with it |
-| tags | Query | string | No | Comma-separated list of tags to include (example: 'OC,CAI', max 3000 chars, default: "") |
-| exclude_tags | Query | string | No | Comma-separated list of tags to exclude (example: 'NSFL,Furry', max 3000 chars, default: "") |
-| page | Query | integer | No | Page number of results (default: 1) |
-| sort | Query | SortEnum | No | Field to sort by (default: "download_count") |
-| asc | Query | boolean | No | Whether to sort ascending (True) or descending (False) (default: false) |
-| include_forks | Query | boolean | No | Whether to return forks or only root items (default: false) |
-| nsfw | Query | boolean | No | Whether to include NSFW items (default: false) |
-| nsfl | Query | boolean | No | Whether to include NSFL items (default: false) |
-| nsfw_only | Query | boolean | No | Whether to include only NSFW items (default: false) |
-| require_images | Query | boolean | No | Exclude results without usage gallery images (default: false) |
-| require_example_dialogues | Query | boolean | No | Exclude results without example dialogues (default: false) |
-| require_alternate_greetings | Query | boolean | No | Exclude results without alternate greetings (default: false) |
-| require_custom_prompt | Query | boolean | No | Exclude results without a custom main/NSFW prompt (default: false) |
-| max_days_ago | Query | integer | No | Maximum age in days of the log |
-| exclude_mine | Query | boolean | No | Exclude your private and unlisted projects (default: false) |
-| only_mine | Query | AccessLevel | No | Whether to only get your projects |
-| min_tokens | Query | integer | No | Minimum token count (default: 200) |
-| max_tokens | Query | integer | No | Maximum token count |
-| require_expressions | Query | boolean | No | Whether to require an expression pack (default: false) |
-| require_lore | Query | boolean | No | Require either an embedded or linked lorebook (default: false) |
-| mine_first | Query | boolean | No | Return your projects and your liked projects first (default: false) |
-| require_lore_embedded | Query | boolean | No | Require an embedded lorebook (default: false) |
-| require_lore_linked | Query | boolean | No | Require a linked lorebook (default: false) |
-| my_favorites | Query | boolean | No | Only return items you have favorited (default: false) |
-| topics | Query | string | No | Comma-separated list of tags to include (max 3000 chars, default: "") |
-| excludetopics | Query | string | No | Comma-separated list of tags to exclude (max 3000 chars, default: "") |
-| special_mode | Query | Special | No | Special mode filter |
-| creator_id | Query | integer | No | Creator ID to filter by |
-| namespace | Query | string | No | Namespace filter |
-| username | Query | string | No | Username filter |
-| inclusive_or | Query | boolean | No | For multiple tags, return matches for ANY (True) or ALL (False) tags (default: false) |
-| recommended_verified | Query | boolean | No | Only return recommended and verified projects (default: false) |
-| min_tags | Query | integer | No | Exclude results with less than this many tags |
-| count | Query | boolean | No | Whether to return the total count or not (default: false) |
-| min_ai_rating | Query | integer | No | Minimum rating of the card |
-| language | Query | string | No | If included, only returns cards in this language |
-| cursor | Query | string | No | Pagination cursor |
-| max_messages | Query | integer | No | Maximum number of messages |
-
-**Example Request**:
-
-```bash
-curl -X GET "https://api.rostro.dev/search?search=fantasy&page=1&first=40&nsfw=false" \
-  -H "Authorization: Bearer <token>"
-```
-
-**Example Response**:
-
-```json
-{
-  "results": [],
-  "total": 0,
-  "page": 1
-}
-```
-
----
-
-#### POST /search
-
-**Description**: Do Internal Search Bypass
-
-**Tags**: None specified
-
-**Parameters**: Same as GET /search
-
-**Example Request**:
-
-```bash
-curl -X POST "https://api.rostro.dev/search?search=fantasy&page=1" \
-  -H "Authorization: Bearer <token>"
-```
-
-**Example Response**:
-
-```json
-{
-  "results": [],
-  "total": 0
-}
-```
-
----
-
-#### POST /minisearch
-
-**Description**: A quick search just by names.
-
-**Tags**: None specified
-
-**Parameters**: None (data in request body)
-
-**Request Body**:
-
-| Field | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| (Refer to MiniSearch schema) | MiniSearch | Yes | Mini search query |
-
-**Example Request**:
-
-```bash
-curl -X POST https://api.rostro.dev/minisearch \
-  -H "Authorization: Bearer <token>" \
-  -H "Content-Type: application/json" \
-  -d '{"query": "character"}'
-```
-
-**Example Response**:
-
-```json
-{
-  "results": []
-}
-```
-
----
-
-### Imagine (Media Generation)
-
-#### POST /imagine
-
-**Description**: A unified endpoint for multimedia asset generation.
-
-**Tags**: Imagine
-
-**Parameters**:
-
-| Name | In (Path/Query) | Type | Required | Description |
-| :--- | :--- | :--- | :--- | :--- |
-| return_immediate | Query | boolean | No | Return immediately without waiting for generation (default: false) |
-
-**Request Body**:
-
-| Field | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| (Refer to GenerationRequest schema) | GenerationRequest | Yes | Generation request parameters |
-
-**Example Request**:
-
-```bash
-curl -X POST "https://api.rostro.dev/imagine?return_immediate=false" \
-  -H "Authorization: Bearer <token>" \
-  -H "Content-Type: application/json" \
-  -d '{"prompt": "A fantasy landscape"}'
-```
-
-**Example Response**:
-
-```json
-{
-  "generation_uuid": "b9ae-6f64957f986a",
-  "primary_media_url": "https://example.com/generated.jpg",
-  "is_done": true,
-  "is_failed": false
-}
-```
-
----
-
-#### POST /imagine/history
-
-**Description**: A unified endpoint for fetching multimedia asset generation history.
-
-**Tags**: Imagine
-
-**Parameters**: None (data in request body)
-
-**Request Body**:
-
-| Field | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| (Refer to HistoryRequest schema) | HistoryRequest | Yes | History request parameters |
-
-**Example Request**:
-
-```bash
-curl -X POST https://api.rostro.dev/imagine/history \
-  -H "Authorization: Bearer <token>" \
-  -H "Content-Type: application/json" \
-  -d '{}'
-```
-
-**Example Response**:
-
-```json
-{
-  "items": [],
-  "cursor": null,
-  "previous_cursor": null
-}
-```
-
----
-
-#### POST /imagine/history/delete
-
-**Description**: Delete the media with these uuids.
-
-**Tags**: Imagine
-
-**Parameters**: None (data in request body)
-
-**Request Body**:
-
-| Field | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| (Refer to DeletionRequest schema) | DeletionRequest | Yes | UUIDs to delete |
-
-**Example Request**:
-
-```bash
-curl -X POST https://api.rostro.dev/imagine/history/delete \
-  -H "Authorization: Bearer <token>" \
-  -H "Content-Type: application/json" \
-  -d '{"uuids": ["b9ae-6f64957f986a"]}'
-```
-
-**Example Response**:
-
-```json
-{
-  "successes": ["b9ae-6f64957f986a"],
-  "failures": []
-}
-```
-
----
-
-### Ratings
-
-#### GET /api/project/{project_id}/ratings
-
-**Description**: Get the ratings for this project.
-
-**Tags**: Read-Only
-
-**Parameters**:
-
-| Name | In (Path/Query) | Type | Required | Description |
-| :--- | :--- | :--- | :--- | :--- |
-| project_id | Path | integer | Yes | Project ID (minimum: 1, example: 172700) |
-
-**Example Request**:
-
-```bash
-curl -X GET https://api.rostro.dev/api/project/172700/ratings \
-  -H "Authorization: Bearer <token>"
-```
-
-**Example Response**:
-
-```json
-{
-  "ratings": [],
-  "average": 0
-}
-```
-
----
-
-#### POST /api/project/{project_id}/ratings/disable
-
-**Description**: Disable ratings for this project.
-
-**Tags**: Projects
-
-**Parameters**:
-
-| Name | In (Path/Query) | Type | Required | Description |
-| :--- | :--- | :--- | :--- | :--- |
-| project_id | Path | integer | Yes | Project ID (minimum: 1, example: 172700) |
-
-**Example Request**:
-
-```bash
-curl -X POST https://api.rostro.dev/api/project/172700/ratings/disable \
-  -H "Authorization: Bearer <token>"
-```
-
-**Example Response**:
-
-```json
-{
-  "message": "success"
-}
-```
-
----
-
-#### POST /api/project/{project_id}/ratings/enable
-
-**Description**: Enable ratings for this project.
-
-**Tags**: Projects
-
-**Parameters**:
-
-| Name | In (Path/Query) | Type | Required | Description |
-| :--- | :--- | :--- | :--- | :--- |
-| project_id | Path | integer | Yes | Project ID (minimum: 1, example: 172700) |
-
-**Example Request**:
-
-```bash
-curl -X POST https://api.rostro.dev/api/project/172700/ratings/enable \
-  -H "Authorization: Bearer <token>"
-```
-
-**Example Response**:
-
-```json
-{
-  "message": "success"
-}
-```
-
----
-
-#### POST /api/project/{project_id}/rate
-
-**Description**: Make or update a rating for this project.
-
-**Tags**: Projects
-
-**Parameters**:
-
-| Name | In (Path/Query) | Type | Required | Description |
-| :--- | :--- | :--- | :--- | :--- |
-| project_id | Path | integer | Yes | Project ID (minimum: 1, example: 172700) |
-
-**Request Body**:
-
-| Field | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| (Refer to UserRating schema) | UserRating | Yes | Rating information |
-
-**Example Request**:
-
-```bash
-curl -X POST https://api.rostro.dev/api/project/172700/rate \
-  -H "Authorization: Bearer <token>" \
-  -H "Content-Type: application/json" \
-  -d '{"rating": 5}'
-```
-
-**Example Response**:
-
-```json
-{
-  "message": "success"
-}
-```
-
----
-
-### User Account Management
-
-#### GET /api/account
-
-**Description**: Get user account information.
-
-**Tags**: User Account
-
-**Parameters**:
-
-| Name | In (Path/Query) | Type | Required | Description |
-| :--- | :--- | :--- | :--- | :--- |
-| stripe_url | Query | boolean | No | Whether to make a stripe billing link (example: true) |
-| tokens | Query | boolean | No | Whether to return token information (default: true, example: true) |
-| blocks | Query | boolean | No | Whether to return blocked user and tag information (default: true, example: true) |
-| nocache | Query | string | No | Do not cache results. For forcing the browser to reload. Does not change the API response |
-| no_cache | Query | string | No | Do not cache results. For forcing the browser to reload. Does not change the API response |
-| badges | Query | boolean | No | Whether to fetch user badges (default: false) |
-
-**Example Request**:
-
-```bash
-curl -X GET "https://api.rostro.dev/api/account?tokens=true&blocks=true" \
-  -H "Authorization: Bearer <token>"
-```
-
-**Example Response**:
-
-```json
-{
-  "username": "user",
-  "email": "user@example.com",
-  "tokens": 1000,
-  "blocked_users": [],
-  "blocked_tags": []
-}
-```
-
----
-
-#### DELETE /api/account
-
-**Description**: Delete this account completely and irreversibly.
-
-**Tags**: User Account
-
-**Parameters**: None
-
-**Example Request**:
-
-```bash
-curl -X DELETE https://api.rostro.dev/api/account \
-  -H "Authorization: Bearer <token>"
-```
-
-**Example Response**:
-
-```json
-{
-  "message": "success"
-}
-```
-
----
-
-#### POST /api/account/block/{block_type}/{name}
-
-**Description**: Block yourself from viewing these in search.
-
-**Tags**: User Account
-
-**Parameters**:
-
-| Name | In (Path/Query) | Type | Required | Description |
-| :--- | :--- | :--- | :--- | :--- |
-| block_type | Path | Blockable | Yes | Type of item to block |
-| name | Path | string | Yes | Name of item to block |
-
-**Example Request**:
-
-```bash
-curl -X POST https://api.rostro.dev/api/account/block/tag/NSFW \
-  -H "Authorization: Bearer <token>"
-```
-
-**Example Response**:
-
-```json
-{
-  "message": "success"
-}
-```
-
----
-
-#### DELETE /api/account/block/{block_type}/{name}
-
-**Description**: Unblock yourself from viewing these in search.
-
-**Tags**: User Account
-
-**Parameters**:
-
-| Name | In (Path/Query) | Type | Required | Description |
-| :--- | :--- | :--- | :--- | :--- |
-| block_type | Path | Blockable | Yes | Type of item to unblock |
-| name | Path | string | Yes | Name of item to unblock |
-
-**Example Request**:
-
-```bash
-curl -X DELETE https://api.rostro.dev/api/account/block/tag/NSFW \
-  -H "Authorization: Bearer <token>"
-```
-
-**Example Response**:
-
-```json
-{
-  "message": "success"
-}
-```
-
----
-
-#### POST /api/account/blacklist
-
-**Description**: Prevent users from commenting specific words/phrases on your pages.
-
-**Tags**: User Account
-
-**Parameters**: None (data in request body)
-
-**Request Body**:
-
-| Field | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| (Refer to WordBlacklist schema) | WordBlacklist | Yes | Word/phrase to blacklist |
-
-**Example Request**:
-
-```bash
-curl -X POST https://api.rostro.dev/api/account/blacklist \
-  -H "Authorization: Bearer <token>" \
-  -H "Content-Type: application/json" \
-  -d '{"word": "spam"}'
-```
-
-**Example Response**:
-
-```json
-{
-  "message": "success"
-}
-```
-
----
-
-#### POST /api/account/blacklist/remove
-
-**Description**: Remove a word from your blacklist.
-
-**Tags**: User Account
-
-**Parameters**: None (data in request body)
-
-**Request Body**:
-
-| Field | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| (Refer to WordBlacklist schema) | WordBlacklist | Yes | Word/phrase to remove from blacklist |
-
-**Example Request**:
-
-```bash
-curl -X POST https://api.rostro.dev/api/account/blacklist/remove \
-  -H "Authorization: Bearer <token>" \
-  -H "Content-Type: application/json" \
-  -d '{"word": "spam"}'
-```
-
-**Example Response**:
-
-```json
-{
-  "message": "success"
-}
-```
-
----
-
-#### POST /api/account/sort/{order}
-
-**Description**: Set a default sort order in search.
-
-**Tags**: User Account
-
-**Parameters**:
-
-| Name | In (Path/Query) | Type | Required | Description |
-| :--- | :--- | :--- | :--- | :--- |
-| order | Path | SortEnum | Yes | Sort order to set as default |
-
-**Example Request**:
-
-```bash
-curl -X POST https://api.rostro.dev/api/account/sort/download_count \
-  -H "Authorization: Bearer <token>"
-```
-
-**Example Response**:
-
-```json
-{
-  "message": "success"
-}
-```
-
----
-
-#### GET /api/self
-
-**Description**: Get truncated user account information.
-
-**Tags**: User Account
-
-**Parameters**: None
-
-**Example Request**:
-
-```bash
-curl -X GET https://api.rostro.dev/api/self \
-  -H "Authorization: Bearer <token>"
-```
-
-**Example Response**:
-
-```json
-{
-  "username": "user",
-  "id": 12345
-}
-```
-
----
-
-### Social Features
-
-#### DELETE /follow/tag/{tagname}
-
-**Description**: Unfollow a tag.
-
-**Tags**: User Account
-
-**Parameters**:
-
-| Name | In (Path/Query) | Type | Required | Description |
-| :--- | :--- | :--- | :--- | :--- |
-| tagname | Path | string | Yes | Tag name to unfollow |
-
-**Example Request**:
-
-```bash
-curl -X DELETE https://api.rostro.dev/follow/tag/Fantasy \
-  -H "Authorization: Bearer <token>"
-```
-
-**Example Response**:
-
-```json
-{
-  "message": "success"
-}
-```
-
----
-
-#### POST /follow/tag/{tagname}
-
-**Description**: Follow a tag.
-
-**Tags**: User Account
-
-**Parameters**:
-
-| Name | In (Path/Query) | Type | Required | Description |
-| :--- | :--- | :--- | :--- | :--- |
-| tagname | Path | string | Yes | Tag name to follow |
-
-**Example Request**:
-
-```bash
-curl -X POST https://api.rostro.dev/follow/tag/Fantasy \
-  -H "Authorization: Bearer <token>"
-```
-
-**Example Response**:
-
-```json
-{
-  "message": "success"
-}
-```
-
----
-
-#### DELETE /api/follow/{username}
-
-**Description**: Unfollow a username.
-
-**Tags**: User Account
-
-**Parameters**:
-
-| Name | In (Path/Query) | Type | Required | Description |
-| :--- | :--- | :--- | :--- | :--- |
-| username | Path | string | Yes | Username to unfollow (example: "You") |
-
-**Example Request**:
-
-```bash
-curl -X DELETE https://api.rostro.dev/api/follow/You \
-  -H "Authorization: Bearer <token>"
-```
-
-**Example Response**:
-
-```json
-{
-  "message": "success"
-}
-```
-
----
-
-#### POST /api/follow/{username}
-
-**Description**: Follow a username.
-
-**Tags**: User Account
-
-**Parameters**:
-
-| Name | In (Path/Query) | Type | Required | Description |
-| :--- | :--- | :--- | :--- | :--- |
-| username | Path | string | Yes | Username to follow (example: "You") |
-
-**Example Request**:
-
-```bash
-curl -X POST https://api.rostro.dev/api/follow/You \
-  -H "Authorization: Bearer <token>"
-```
-
-**Example Response**:
-
-```json
-{
-  "message": "success"
-}
-```
-
----
-
-#### POST /api/follows/{username}
-
-**Description**: Get who a given username follows.
-
-**Tags**: Read-Only
-
-**Parameters**:
-
-| Name | In (Path/Query) | Type | Required | Description |
-| :--- | :--- | :--- | :--- | :--- |
-| username | Path | string | Yes | Username (example: "You") |
-| page | Query | integer | No | Page to return (default: 1) |
-| count | Query | boolean | No | Whether to return the total count or not (default: true) |
-| asc | Query | boolean | No | Whether to sort ascending (True) or descending (False) (default: false) |
-| min_ai_rating | Query | integer | No | Minimum rating of the card |
-| nsfw | Query | boolean | No | Whether to include NSFW items (default: true) |
-| nsfl | Query | boolean | No | Whether to include NSFL items (default: true) |
-
-**Example Request**:
-
-```bash
-curl -X POST "https://api.rostro.dev/api/follows/You?page=1" \
-  -H "Authorization: Bearer <token>"
-```
-
-**Example Response**:
-
-```json
-{
-  "follows": [],
-  "total": 0
-}
-```
-
----
-
-#### GET /api/follows/{username}
-
-**Description**: Get who a given username follows.
-
-**Tags**: Read-Only
-
-**Parameters**: Same as POST /api/follows/{username}
-
-**Example Request**:
-
-```bash
-curl -X GET "https://api.rostro.dev/api/follows/You?page=1" \
-  -H "Authorization: Bearer <token>"
-```
-
-**Example Response**:
-
-```json
-{
-  "follows": [],
-  "total": 0
-}
-```
-
----
-
-#### GET /api/followers/{username}
-
-**Description**: Get who follows a given username.
-
-**Tags**: Read-Only
-
-**Parameters**:
-
-| Name | In (Path/Query) | Type | Required | Description |
-| :--- | :--- | :--- | :--- | :--- |
-| username | Path | string | Yes | Username (example: "You") |
-| page | Query | integer | No | Page to return (default: 1) |
-| count | Query | boolean | No | Whether to return the total count or not (default: true) |
-| asc | Query | boolean | No | Whether to sort ascending (True) or descending (False) (default: false) |
-| min_ai_rating | Query | integer | No | Minimum rating of the card |
-| nsfw | Query | boolean | No | Whether to include NSFW items (default: true) |
-| nsfl | Query | boolean | No | Whether to include NSFL items (default: true) |
-
-**Example Request**:
-
-```bash
-curl -X GET "https://api.rostro.dev/api/followers/You?page=1" \
-  -H "Authorization: Bearer <token>"
-```
-
-**Example Response**:
-
-```json
-{
-  "followers": [],
-  "total": 0
-}
-```
-
----
-
-#### GET /api/timeline/v1
-
-**Description**: Get recent updates from people you follow.
-
-**Tags**: Read-Only
-
-**Parameters**:
-
-| Name | In (Path/Query) | Type | Required | Description |
-| :--- | :--- | :--- | :--- | :--- |
-| page | Query | integer | No | Page to return (default: 1) |
-| count | Query | boolean | No | Whether to return the total count or not (default: true) |
-| asc | Query | boolean | No | Whether to sort ascending (True) or descending (False) (default: false) |
-| min_ai_rating | Query | integer | No | Minimum rating of the card |
-| nsfw | Query | boolean | No | Whether to include NSFW items (default: true) |
-| nsfl | Query | boolean | No | Whether to include NSFL items (default: true) |
-
-**Example Request**:
-
-```bash
-curl -X GET "https://api.rostro.dev/api/timeline/v1?page=1" \
-  -H "Authorization: Bearer <token>"
-```
-
-**Example Response**:
-
-```json
-{
-  "items": [],
-  "total": 0
-}
-```
-
----
-
-#### GET /atproto/{username}
-
-**Description**: Get the configured atproto for this username for Bluesky.
-
-**Tags**: Read-Only
-
-**Parameters**:
-
-| Name | In (Path/Query) | Type | Required | Description |
-| :--- | :--- | :--- | :--- | :--- |
-| username | Path | string | Yes | Username (example: "You") |
-
-**Example Request**:
-
-```bash
-curl -X GET https://api.rostro.dev/atproto/You
-```
-
-**Example Response**:
-
-```json
-{
-  "atproto": "did:plc:..."
-}
-```
-
----
-
-### Character Chat
-
-#### POST /api/core/characters
-
-**Description**: Create char
-
-**Tags**: Chat
-
-**Parameters**: None (data in request body)
-
-**Request Body**:
-
-| Field | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| (Refer to CharacterCreate schema) | CharacterCreate | Yes | Character creation data |
-
-**Example Request**:
-
-```bash
-curl -X POST https://api.rostro.dev/api/core/characters \
-  -H "Authorization: Bearer <token>" \
-  -H "Content-Type: application/json" \
-  -d '{"name": "MyCharacter"}'
-```
-
-**Example Response**:
-
-```json
-{
-  "message": "success",
-  "character_id": 12345
-}
-```
-
----
-
-#### DELETE /api/core/characters/link/{username}/{pathname}/lorebook/{project_id}
-
-**Description**: Remove a linked lorebook for a character.
-
-**Tags**: Chat
-
-**Parameters**:
-
-| Name | In (Path/Query) | Type | Required | Description |
-| :--- | :--- | :--- | :--- | :--- |
-| username | Path | string | Yes | Username (example: "You") |
-| pathname | Path | string | Yes | Project Slug or ID (example: "expressions-extension-5cb6846b9160") |
-| project_id | Path | integer | Yes | Project ID (minimum: 1, example: 12338) |
-
-**Example Request**:
-
-```bash
-curl -X DELETE https://api.rostro.dev/api/core/characters/link/You/expressions-extension-5cb6846b9160/lorebook/12338 \
-  -H "Authorization: Bearer <token>"
-```
-
-**Example Response**:
-
-```json
-{
-  "message": "success"
-}
-```
-
----
-
-#### POST /api/core/characters/link/{username}/{pathname}/lorebook/{project_id}
-
-**Description**: Add a linked lorebook for a character.
-
-**Tags**: Chat
-
-**Parameters**:
-
-| Name | In (Path/Query) | Type | Required | Description |
-| :--- | :--- | :--- | :--- | :--- |
-| username | Path | string | Yes | Username (example: "You") |
-| pathname | Path | string | Yes | Project Slug or ID (example: "expressions-extension-5cb6846b9160") |
-| project_id | Path | integer | Yes | Project ID (minimum: 1, example: 172700) |
-
-**Example Request**:
-
-```bash
-curl -X POST https://api.rostro.dev/api/core/characters/link/You/expressions-extension-5cb6846b9160/lorebook/172700 \
-  -H "Authorization: Bearer <token>"
-```
-
-**Example Response**:
-
-```json
-{
-  "message": "success"
-}
-```
-
----
-
-#### PUT /api/core/characters/{username}/{pathname}
-
-**Description**: Update char
-
-**Tags**: Chat
-
-**Parameters**:
-
-| Name | In (Path/Query) | Type | Required | Description |
-| :--- | :--- | :--- | :--- | :--- |
-| username | Path | string | Yes | Username (example: "You") |
-| pathname | Path | string | Yes | Project Slug or ID (example: "expressions-extension-5cb6846b9160") |
-
-**Request Body**:
-
-| Field | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| (Refer to CharacterUpdate schema) | CharacterUpdate | Yes | Character update data |
-
-**Example Request**:
-
-```bash
-curl -X PUT https://api.rostro.dev/api/core/characters/You/expressions-extension-5cb6846b9160 \
-  -H "Authorization: Bearer <token>" \
-  -H "Content-Type: application/json" \
-  -d '{"name": "UpdatedCharacter"}'
-```
-
-**Example Response**:
-
-```json
-{
-  "message": "success"
-}
-```
-
----
-
-### User Settings
-
-#### POST /api/self/username
-
-**Description**: Attempt to change your username.
-
-**Tags**: Unstable
-
-**Parameters**: None (data in request body)
-
-**Request Body**:
-
-| Field | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| (Refer to UsernameChangeRequest schema) | UsernameChangeRequest | Yes | New username |
-
-**Example Request**:
-
-```bash
-curl -X POST https://api.rostro.dev/api/self/username \
-  -H "Authorization: Bearer <token>" \
-  -H "Content-Type: application/json" \
-  -d '{"username": "NewUsername"}'
-```
-
-**Example Response**:
-
-```json
-{
-  "message": "success"
-}
-```
-
----
-
-#### POST /api/check/username
-
-**Description**: Check if username is taken.
-
-**Tags**: Unstable
-
-**Parameters**: None (data in request body)
-
-**Request Body**:
-
-| Field | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| (Refer to UsernameChangeRequest schema) | UsernameChangeRequest | Yes | Username to check |
-
-**Example Request**:
-
-```bash
-curl -X POST https://api.rostro.dev/api/check/username \
-  -H "Content-Type: application/json" \
-  -d '{"username": "TestUser"}'
-```
-
-**Example Response**:
-
-```json
-{
-  "available": true
-}
-```
-
----
-
-#### POST /config/{config_id}/{sub_id}
-
-**Description**: Upsert a config
-
-**Tags**: User Account
-
-**Parameters**:
-
-| Name | In (Path/Query) | Type | Required | Description |
-| :--- | :--- | :--- | :--- | :--- |
-| config_id | Path | string | Yes | Configuration ID (example: "3242362") |
-| sub_id | Path | string | Yes | Sub ID |
-
-**Request Body**:
-
-| Field | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| (Refer to ConfigUpsert schema) | ConfigUpsert | Yes | Configuration data |
-
-**Example Request**:
-
-```bash
-curl -X POST https://api.rostro.dev/config/3242362/sub1 \
-  -H "Authorization: Bearer <token>" \
-  -H "Content-Type: application/json" \
-  -d '{}'
-```
-
-**Example Response**:
-
-```json
-{
-  "message": "success"
-}
-```
-
----
-
-#### DELETE /config/{config_id}/{sub_id}
-
-**Description**: Delete config
-
-**Tags**: User Account
-
-**Parameters**:
-
-| Name | In (Path/Query) | Type | Required | Description |
-| :--- | :--- | :--- | :--- | :--- |
-| config_id | Path | string | Yes | Configuration ID (example: "3242362") |
-| sub_id | Path | string | Yes | Sub ID |
-
-**Example Request**:
-
-```bash
-curl -X DELETE https://api.rostro.dev/config/3242362/sub1 \
-  -H "Authorization: Bearer <token>"
-```
-
-**Example Response**:
-
-```json
-{
-  "message": "success"
-}
-```
-
----
-
-#### POST /config
-
-**Description**: Upsert configs
-
-**Tags**: User Account
-
-**Parameters**: None (data in request body)
-
-**Request Body**:
-
-| Field | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| (Refer to ConfigsUpsert schema) | ConfigsUpsert | Yes | Multiple configuration data |
-
-**Example Request**:
-
-```bash
-curl -X POST https://api.rostro.dev/config \
-  -H "Authorization: Bearer <token>" \
-  -H "Content-Type: application/json" \
-  -d '{"configs": []}'
-```
-
-**Example Response**:
-
-```json
-{
-  "message": "success"
-}
-```
-
----
-
-#### DELETE /config
-
-**Description**: Delete configs
-
-**Tags**: User Account
-
-**Parameters**: None (data in request body)
-
-**Request Body**:
-
-| Field | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| (Refer to ConfigsDelete schema) | ConfigsDelete | Yes | Configuration IDs to delete |
-
-**Example Request**:
-
-```bash
-curl -X DELETE https://api.rostro.dev/config \
-  -H "Authorization: Bearer <token>" \
-  -H "Content-Type: application/json" \
-  -d '{"config_ids": []}'
-```
-
-**Example Response**:
-
-```json
-{
-  "message": "success"
-}
-```
-
----
-
-## Error Handling
-
-The Rostro API uses standard HTTP status codes to indicate the success or failure of requests:
-
-| Status Code | Description |
-| :--- | :--- |
-| 200 | Successful Response - Request completed successfully |
-| 400 | Bad Request - The request was malformed or invalid |
-| 401 | Unauthorized - Authentication credentials are missing or invalid |
-| 403 | Forbidden - The authenticated user doesn't have permission to access this resource |
-| 404 | Not Found - The requested resource doesn't exist |
-| 422 | Validation Error - Request validation failed (check request body/parameters) |
-| 500 | Internal Server Error - An error occurred on the server |
-
-### Error Response Format
-
-Error responses follow these schema formats:
-
-**UserError** (400, 401, 403, 404):
-```json
-{
-  "detail": "Error message describing what went wrong"
-}
-```
-
-**APIError** (500):
-```json
-{
-  "detail": "Internal server error message"
-}
-```
-
-**HTTPValidationError** (422):
-```json
-{
-  "detail": [
-    {
-      "loc": ["body", "field_name"],
-      "msg": "Validation error message",
-      "type": "value_error"
-    }
+  "tags": [
+    { "name": "horror", "count": 150 },
+    { "name": "scifi", "count": 89 }
   ]
 }
-```
 
----
+PUT /api/project/{project_id}/metadata
+Description: Update the metadata for this project.
+Parameters:
+| Name | In | Type | Required | Description |
+|---|---|---|---|---|
+| project_id | Path | integer | Yes | Project ID (e.g., 172700) |
+Request Body: CommonMetadataUpdate
+| Field | Type | Required | Description |
+|---|---|---|---|
+| title | string | No | New title for the project. |
+| description | string | No | New description. |
+| tags | array | No | List of tags. |
+Example Request:
+curl -X PUT "https://api.rostro.dev/api/project/172700/metadata" \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "New Project Title",
+    "description": "Updated description"
+  }'
 
-## Schemas
+Example Response:
+{
+  "success": true,
+  "message": "Metadata updated successfully"
+}
 
-### Core Response Schemas
+GET /api/gallery
+Description: Fetch the gallery of all images for all projects.
+Parameters:
+| Name | In | Type | Required | Description |
+|---|---|---|---|---|
+| nsfw | Query | boolean | No | Include NSFW content (default: true). |
+| page | Query | integer | No | Page number (default: 1). |
+| limit | Query | integer | No | Items per page (default: 24). |
+| count | Query | boolean | No | Return total count (default: true). |
+Example Request:
+curl -X GET "https://api.rostro.dev/api/gallery?nsfw=true&page=1&limit=24" \
+  -H "Authorization: Bearer <token>"
 
-**APIResponse**
-- Generic success response
-- Fields: `message` (string)
+Example Response:
+{
+  "count": 100,
+  "nodes": [
+    { "uuid": "img-uuid-1", "primary_image_path": "path/to/img.png" }
+  ],
+  "page": 1
+}
 
-**Account**
-- User account information
-- Fields: username, email, tokens, blocked users, blocked tags, etc.
+GET /api/gallery/project/{project_id}
+Description: Fetch the gallery of images for a specific project.
+Parameters:
+| Name | In | Type | Required | Description |
+|---|---|---|---|---|
+| project_id | Path | integer | Yes | Project ID. |
+| nsfw | Query | boolean | No | Include NSFW content. |
+| page | Query | integer | No | Page number. |
+| limit | Query | integer | No | Items per page. |
+| count | Query | boolean | No | Return total count. |
+Example Request:
+curl -X GET "https://api.rostro.dev/api/gallery/project/172700?page=1" \
+  -H "Authorization: Bearer <token>"
 
-**AccountLite**
-- Truncated user account information
-- Fields: username, id
+POST /api/gallery/upload
+Description: Upload to the gallery of images.
+Request Body: ImageUploadRequest
+| Field | Type | Required | Description |
+|---|---|---|---|
+| image | string | Yes | Base64 encoded image or URL. |
+| project_id | integer | Yes | ID of the project to attach to. |
+| caption | string | No | Image caption. |
+Example Request:
+curl -X POST "https://api.rostro.dev/api/gallery/upload" \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "project_id": 172700,
+    "image": "data:image/png;base64,..."
+  }'
 
-**Gallery**
-- Gallery response with items
-- Fields: items (array), total, page, limit
+Example Response:
+{
+  "uuid": "new-image-uuid",
+  "primary_image_path": "https://cdn.rostro.dev/img.png",
+  "user_owned": true
+}
 
-**GalleryItem**
-- Individual gallery item
-- Fields: uuid, url, metadata
+POST /api/infer/emotion
+Description: Infer the emotion of a string.
+Request Body: EmotionRequest
+| Field | Type | Required | Description |
+|---|---|---|---|
+| text | string | Yes | The text to analyze. |
+Example Request:
+curl -X POST "https://api.rostro.dev/api/infer/emotion" \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{ "text": "I am so happy today!" }'
 
-**Tags**
-- Tags collection
-- Fields: tags (array with counts)
+Example Response:
+{
+  "emotion": "joy",
+  "confidence": 0.98
+}
 
-**LoreResult**
-- Lore query results
-- Fields: results (array)
+DELETE /api/gallery/{uuid}
+Description: Delete an image from the gallery.
+Parameters:
+| Name | In | Type | Required | Description |
+|---|---|---|---|---|
+| uuid | Path | string | Yes | Image UUID. |
+| projectId | Query | integer | No | Optional Project ID to dissociate. |
+Example Request:
+curl -X DELETE "https://api.rostro.dev/api/gallery/3e41a43b-4ffc-41dd-8ad8-5cb6846b9160" \
+  -H "Authorization: Bearer <token>"
 
-**LoreItem**
-- Individual lore item
-- Fields: uuid, content, owner_id
+POST /api/tags/{project_id}/{tagname}
+Description: Add a tag to an entity.
+Parameters:
+| Name | In | Type | Required | Description |
+|---|---|---|---|---|
+| project_id | Path | integer | Yes | Project ID. |
+| tagname | Path | string | Yes | Tag name (e.g., HOT). |
+Example Request:
+curl -X POST "https://api.rostro.dev/api/tags/172700/HOT" \
+  -H "Authorization: Bearer <token>"
 
-**LoreItems**
-- Collection of lore items
-- Fields: items (array)
+DELETE /api/tags/{project_id}/{tagname}
+Description: Remove a tag from an entity.
+Parameters:
+| Name | In | Type | Required | Description |
+|---|---|---|---|---|
+| project_id | Path | integer | Yes | Project ID. |
+| tagname | Path | string | Yes | Tag name. |
+Example Request:
+curl -X DELETE "https://api.rostro.dev/api/tags/172700/HOT" \
+  -H "Authorization: Bearer <token>"
 
-**ImaginedItem**
-- Generated media item
-- Fields: generation_uuid, cost, primary_media_url, description, is_done, is_failed, uuid, user_id, secondary_media_urls, error, note
+GET /api/users/{username}
+Description: Get the profile for this user.
+Parameters:
+| Name | In | Type | Required | Description |
+|---|---|---|---|---|
+| username | Path | string | Yes | Target username. |
+| nsfw | Query | string | No | true or false. |
+| nsfl | Query | boolean | No | true or false. |
+| exclude_mine | Query | boolean | No | Exclude private/unlisted projects. |
+| include_projects | Query | boolean | No | Fetch projects with profile. |
+Example Request:
+curl -X GET "https://api.rostro.dev/api/users/You?nsfw=true" \
+  -H "Authorization: Bearer <token>"
 
-**ImaginedItems**
-- Collection of generated media
-- Fields: items (array), previous_cursor, cursor
+GET /api/leaderboard/v1
+Description: Get the user leaderboard.
+Parameters:
+| Name | In | Type | Required | Description |
+|---|---|---|---|---|
+| order_by | Query | string | No | Field to order by (default: avg_msgs_chat). |
+Example Request:
+curl -X GET "https://api.rostro.dev/api/leaderboard/v1" \
+  -H "Authorization: Bearer <token>"
 
-**DeletionResponse**
-- Deletion operation results
-- Fields: successes (array), failures (array)
+POST /lore
+Description: Make a RAG lore request.
+Request Body: LoreQuery
+| Field | Type | Required | Description |
+|---|---|---|---|
+| query | string | Yes | The search query for lore. |
+| limit | integer | No | Max results. |
+Example Request:
+curl -X POST "https://api.rostro.dev/lore" \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{ "query": "history of the kingdom" }'
 
-**RatingsResponse**
-- Project ratings
-- Fields: ratings (array), average
+POST /lore/item
+Description: Add an unstructured lore item.
+Request Body: Multipart/Form-Data
+| Field | Type | Required | Description |
+|---|---|---|---|
+| content | file/string | Yes | The content of the lore item. |
+| metadata | string | No | JSON string of metadata. |
+Example Request:
+curl -X POST "https://api.rostro.dev/lore/item" \
+  -H "Authorization: Bearer <token>" \
+  -F "content=Ancient scroll text..."
 
-**FollowsObject**
-- User follows information
-- Fields: follows (array), total
+GET /lore/items
+Description: Get unstructured items for owners.
+Request Body: LoreFetch
+| Field | Type | Required | Description |
+|---|---|---|---|
+| owner_ids | array | Yes | List of owner IDs to fetch lore for. |
+Example Request:
+curl -X GET "https://api.rostro.dev/lore/items" \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{ "owner_ids": [123, 456] }'
 
-**SearchResults**
-- Search results
-- Fields: items (array), total, page
+DELETE /lore/{owner_id}/item/{uuid}
+Description: Remove an unstructured lore item.
+Parameters:
+| Name | In | Type | Required | Description |
+|---|---|---|---|---|
+| uuid | Path | string | Yes | Item UUID. |
+| owner_id | Path | integer | Yes | Owner ID. |
+Example Request:
+curl -X DELETE "https://api.rostro.dev/lore/2108776/item/1b6c5288-731c-4345-a756-1b02ee8e080f" \
+  -H "Authorization: Bearer <token>"
 
-**WrappedSearch**
-- Wrapped search results with metadata
-- Fields: results, total, page, cursor
+GET /search
+Description: Do Internal Search.
+Parameters (Selection):
+| Name | In | Type | Required | Description |
+|---|---|---|---|---|
+| search | Query | string | No | Full-text search of definitions. |
+| tags | Query | string | No | Comma-separated tags (e.g., 'OC,CAI'). |
+| sort | Query | string | No | Sort field (default: download_count). |
+| nsfw | Query | boolean | No | Include NSFW. |
+| page | Query | integer | No | Page number. |
+Example Request:
+curl -X GET "https://api.rostro.dev/search?search=wizard&sort=download_count" \
+  -H "Authorization: Bearer <token>"
 
-**MiniSearchResponse**
-- Mini search results
-- Fields: results (array)
+POST /search
+Description: Do Internal Search Bypass (Post method for same search functionality).
+Parameters: Same as GET /search.
+Example Request:
+curl -X POST "https://api.rostro.dev/search?search=wizard" \
+  -H "Authorization: Bearer <token>"
 
-**LeaderResults**
-- Leaderboard results
-- Fields: leaders (array)
+POST /minisearch
+Description: A quick search just by names.
+Request Body: MiniSearch
+| Field | Type | Required | Description |
+|---|---|---|---|
+| query | string | Yes | Name to search for. |
+Example Request:
+curl -X POST "https://api.rostro.dev/minisearch" \
+  -H "Content-Type: application/json" \
+  -d '{ "query": "Gandalf" }'
 
-### Request Schemas
+POST /imagine
+Description: A unified endpoint for multimedia asset generation.
+Parameters:
+| Name | In | Type | Required | Description |
+|---|---|---|---|---|
+| return_immediate | Query | boolean | No | Default: false. |
+Request Body: GenerationRequest
+| Field | Type | Required | Description |
+|---|---|---|---|
+| prompt | string | No | Description of what to generate. |
+| generation_type | string | No | Type (text_to_image, text_to_speech, etc.). |
+| width | integer | No | Canvas width. |
+| height | integer | No | Canvas height. |
+| model | string | No | Model to use. |
+Example Request:
+curl -X POST "https://api.rostro.dev/imagine" \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "prompt": "A futuristic city skyline",
+    "generation_type": "text_to_image"
+  }'
 
-**TagsQuery**
-- Query parameters for tags search
-- Used in POST /tags
+Example Response:
+{
+  "generation_uuid": "b9ae-6f64957f986a",
+  "is_done": true,
+  "primary_media_url": "https://cdn.rostro.dev/gen/image.png"
+}
 
-**CommonMetadataUpdate**
-- Project metadata update
-- Used in PUT /api/project/{project_id}/metadata
+POST /imagine/history
+Description: A unified endpoint for fetching multimedia asset generation history.
+Request Body: HistoryRequest
+| Field | Type | Required | Description |
+|---|---|---|---|
+| first | integer | No | Number of results (default: 10). |
+| generated_only | boolean | No | Return only generated images. |
+Example Request:
+curl -X POST "https://api.rostro.dev/imagine/history" \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{ "first": 5 }'
 
-**ImageUploadRequest**
-- Image upload data
-- Used in POST /api/gallery/upload
+POST /imagine/history/delete
+Description: Delete the media with these uuids.
+Request Body: DeletionRequest
+| Field | Type | Required | Description |
+|---|---|---|---|
+| uuids | array | No | List of UUID strings to delete. |
+Example Request:
+curl -X POST "https://api.rostro.dev/imagine/history/delete" \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{ "uuids": ["uuid-1", "uuid-2"] }'
 
-**EmotionRequest**
-- Emotion analysis request
-- Fields: text (string)
+GET /api/project/{project_id}/ratings
+Description: Get the ratings for this project.
+Parameters:
+| Name | In | Type | Required | Description |
+|---|---|---|---|---|
+| project_id | Path | integer | Yes | Project ID. |
+Example Request:
+curl -X GET "https://api.rostro.dev/api/project/172700/ratings" \
+  -H "Authorization: Bearer <token>"
 
-**LoreQuery**
-- Lore query parameters
-- Used in POST /lore
+POST /api/project/{project_id}/ratings/disable
+Description: Disable ratings for this project.
+Parameters:
+| Name | In | Type | Required | Description |
+|---|---|---|---|---|
+| project_id | Path | integer | Yes | Project ID. |
+Example Request:
+curl -X POST "https://api.rostro.dev/api/project/172700/ratings/disable" \
+  -H "Authorization: Bearer <token>"
 
-**LoreFetch**
-- Lore fetch parameters
-- Fields: owner_ids (array)
+POST /api/project/{project_id}/ratings/enable
+Description: Enable ratings for this project.
+Parameters:
+| Name | In | Type | Required | Description |
+|---|---|---|---|---|
+| project_id | Path | integer | Yes | Project ID. |
+Example Request:
+curl -X POST "https://api.rostro.dev/api/project/172700/ratings/enable" \
+  -H "Authorization: Bearer <token>"
 
-**GenerationRequest**
-- Media generation request
-- Used in POST /imagine
+POST /api/project/{project_id}/rate
+Description: Make or update a rating for this project.
+Parameters:
+| Name | In | Type | Required | Description |
+|---|---|---|---|---|
+| project_id | Path | integer | Yes | Project ID. |
+Request Body: UserRating
+| Field | Type | Required | Description |
+|---|---|---|---|
+| rating | integer | Yes | Star rating (e.g. 1-5). |
+| comment | string | No | Optional review comment. |
+Example Request:
+curl -X POST "https://api.rostro.dev/api/project/172700/rate" \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{ "rating": 5, "comment": "Great!" }'
 
-**HistoryRequest**
-- Generation history request
-- Used in POST /imagine/history
+GET /api/account
+Description: Get user account information.
+Parameters:
+| Name | In | Type | Required | Description |
+|---|---|---|---|---|
+| stripe_url | Query | boolean | No | Return stripe billing link. |
+| tokens | Query | boolean | No | Return token info (default: true). |
+| blocks | Query | boolean | No | Return blocked info (default: true). |
+Example Request:
+curl -X GET "https://api.rostro.dev/api/account" \
+  -H "Authorization: Bearer <token>"
 
-**DeletionRequest**
-- Media deletion request
-- Fields: uuids (array)
+Example Response:
+{
+  "username": "MyUser",
+  "email": "me@example.com",
+  "credits": 500
+}
 
-**UserRating**
-- User rating data
-- Fields: rating (integer)
+DELETE /api/account
+Description: Delete this account completely and irreversibly.
+Example Request:
+curl -X DELETE "https://api.rostro.dev/api/account" \
+  -H "Authorization: Bearer <token>"
 
-**CharacterCreate**
-- Character creation data
-- Fields: name, description, etc.
+POST /api/account/block/{block_type}/{name}
+Description: Block yourself from viewing these in search.
+Parameters:
+| Name | In | Type | Required | Description |
+|---|---|---|---|---|
+| block_type | Path | string | Yes | Type of block (e.g., user, tag). |
+| name | Path | string | Yes | Name of the entity to block. |
+Example Request:
+curl -X POST "https://api.rostro.dev/api/account/block/user/BadUser" \
+  -H "Authorization: Bearer <token>"
 
-**CharacterUpdate**
-- Character update data
-- Fields: name, description, etc.
+DELETE /api/account/block/{block_type}/{name}
+Description: Unblock yourself from viewing these in search.
+Parameters: Same as POST.
+Example Request:
+curl -X DELETE "https://api.rostro.dev/api/account/block/user/BadUser" \
+  -H "Authorization: Bearer <token>"
 
-**UsernameChangeRequest**
-- Username change/check request
-- Fields: username (string)
+POST /api/account/blacklist
+Description: Prevent users from commenting specific words/phrases on your pages.
+Request Body: WordBlacklist
+| Field | Type | Required | Description |
+|---|---|---|---|
+| word | string | Yes | The word to blacklist. |
+Example Request:
+curl -X POST "https://api.rostro.dev/api/account/blacklist" \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{ "word": "spam" }'
 
-**ConfigUpsert**
-- Configuration upsert data
-- Fields: config data
+POST /api/account/blacklist/remove
+Description: Remove a word from your blacklist.
+Request Body: WordBlacklist
+Example Request:
+curl -X POST "https://api.rostro.dev/api/account/blacklist/remove" \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{ "word": "spam" }'
 
-**ConfigsUpsert**
-- Multiple configurations upsert
-- Fields: configs (array)
+POST /api/account/sort/{order}
+Description: Set a default sort order in search.
+Parameters:
+| Name | In | Type | Required | Description |
+|---|---|---|---|---|
+| order | Path | string | Yes | Sort order enum (e.g. download_count). |
+Example Request:
+curl -X POST "https://api.rostro.dev/api/account/sort/download_count" \
+  -H "Authorization: Bearer <token>"
 
-**ConfigsDelete**
-- Configuration deletion request
-- Fields: config_ids (array)
+GET /api/self
+Description: Get truncated user account information.
+Example Request:
+curl -X GET "https://api.rostro.dev/api/self" \
+  -H "Authorization: Bearer <token>"
 
-**WordBlacklist**
-- Word blacklist data
-- Fields: word (string)
+POST /follow/tag/{tagname}
+Description: Follow a tag.
+Parameters:
+| Name | In | Type | Required | Description |
+|---|---|---|---|---|
+| tagname | Path | string | Yes | Tag name. |
+Example Request:
+curl -X POST "https://api.rostro.dev/follow/tag/fantasy" \
+  -H "Authorization: Bearer <token>"
 
-**MiniSearch**
-- Mini search query
-- Fields: query (string)
+DELETE /follow/tag/{tagname}
+Description: Unfollow a tag.
+Parameters: Same as POST.
+Example Request:
+curl -X DELETE "https://api.rostro.dev/follow/tag/fantasy" \
+  -H "Authorization: Bearer <token>"
 
-### Enum Schemas
+POST /api/follow/{username}
+Description: Follow a username.
+Parameters:
+| Name | In | Type | Required | Description |
+|---|---|---|---|---|
+| username | Path | string | Yes | Username. |
+Example Request:
+curl -X POST "https://api.rostro.dev/api/follow/someuser" \
+  -H "Authorization: Bearer <token>"
 
-**SortEnum**
-- Sorting options (e.g., download_count, creation_date, etc.)
+DELETE /api/follow/{username}
+Description: Unfollow a username.
+Parameters: Same as POST.
+Example Request:
+curl -X DELETE "https://api.rostro.dev/api/follow/someuser" \
+  -H "Authorization: Bearer <token>"
 
-**LeaderSortEnum**
-- Leaderboard sorting options (e.g., avg_msgs_chat)
+POST /api/follows/{username}
+Description: Get who a given username follows.
+Parameters:
+| Name | In | Type | Required | Description |
+|---|---|---|---|---|
+| username | Path | string | Yes | Username. |
+| page | Query | integer | No | Page number. |
+Example Request:
+curl -X POST "https://api.rostro.dev/api/follows/You?page=1" \
+  -H "Authorization: Bearer <token>"
 
-**AccessLevel**
-- Access level options (public, private, unlisted)
+GET /api/follows/{username}
+Description: Get who a given username follows (GET version).
+Parameters: Same as POST.
+GET /api/followers/{username}
+Description: Get who follows a given username.
+Parameters:
+| Name | In | Type | Required | Description |
+|---|---|---|---|---|
+| username | Path | string | Yes | Username. |
+| page | Query | integer | No | Page number. |
+Example Request:
+curl -X GET "https://api.rostro.dev/api/followers/You?page=1" \
+  -H "Authorization: Bearer <token>"
 
-**Special**
-- Special mode filter options
+GET /api/timeline/v1
+Description: Get recent updates from people you follow.
+Parameters:
+| Name | In | Type | Required | Description |
+|---|---|---|---|---|
+| page | Query | integer | No | Page number. |
+| nsfw | Query | boolean | No | Include NSFW. |
+Example Request:
+curl -X GET "https://api.rostro.dev/api/timeline/v1" \
+  -H "Authorization: Bearer <token>"
 
-**Blockable**
-- Blockable item types (user, tag)
+GET /atproto/{username}
+Description: Get the configured atproto for this username for Bluesky.
+Parameters:
+| Name | In | Type | Required | Description |
+|---|---|---|---|---|
+| username | Path | string | Yes | Username. |
+Example Request:
+curl -X GET "https://api.rostro.dev/atproto/You"
 
-### Complex Schemas
+POST /api/core/characters
+Description: Create char.
+Request Body: CharacterCreate
+| Field | Type | Required | Description |
+|---|---|---|---|
+| name | string | Yes | Character Name. |
+| description | string | Yes | Character Description. |
+Example Request:
+curl -X POST "https://api.rostro.dev/api/core/characters" \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{ "name": "Hero", "description": "A brave hero." }'
 
-**LayerInfo**
-- Layer information for projects
-- Fields: width, height, dpi, z_index, opacity, duration, visible, locked, start_time, end_time, in_point, out_point, effects, children
+POST /api/core/characters/link/{username}/{pathname}/lorebook/{project_id}
+Description: Add a linked lorebook for a character.
+Parameters:
+| Name | In | Type | Required | Description |
+|---|---|---|---|---|
+| username | Path | string | Yes | Username. |
+| pathname | Path | string | Yes | Project Slug. |
+| project_id | Path | integer | Yes | Project ID of lorebook. |
+Example Request:
+curl -X POST "https://api.rostro.dev/api/core/characters/link/You/char-slug/lorebook/123" \
+  -H "Authorization: Bearer <token>"
 
-**Rejection**
-- Rejection information for failed generations
-- Fields: reason (RejectionReason enum), location
+DELETE /api/core/characters/link/{username}/{pathname}/lorebook/{project_id}
+Description: Remove a linked lorebook for a character.
+Parameters: Same as POST.
+PUT /api/core/characters/{username}/{pathname}
+Description: Update char.
+Parameters:
+| Name | In | Type | Required | Description |
+|---|---|---|---|---|
+| username | Path | string | Yes | Username. |
+| pathname | Path | string | Yes | Project Slug. |
+Request Body: CharacterUpdate
+Example Request:
+curl -X PUT "https://api.rostro.dev/api/core/characters/You/char-slug" \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{ "description": "Updated description" }'
 
-**RejectionReason**
-- Enum: unknown, explicit_text, explicit_image, malformed_image, out_of_credits
+POST /api/self/username
+Description: Attempt to change your username.
+Request Body: UsernameChangeRequest
+| Field | Type | Required | Description |
+|---|---|---|---|
+| new_username | string | Yes | Requested username. |
+Example Request:
+curl -X POST "https://api.rostro.dev/api/self/username" \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{ "new_username": "CoolNewName" }'
 
-**HTTPValidationError**
-- Validation error details
-- Fields: detail (array of validation errors)
+POST /api/check/username
+Description: Check if username is taken.
+Request Body: UsernameChangeRequest
+Example Request:
+curl -X POST "https://api.rostro.dev/api/check/username" \
+  -H "Content-Type: application/json" \
+  -d '{ "new_username": "CheckThisName" }'
 
----
+POST /config/{config_id}/{sub_id}
+Description: Upsert a config.
+Parameters:
+| Name | In | Type | Required | Description |
+|---|---|---|---|---|
+| config_id | Path | string | Yes | Config ID. |
+| sub_id | Path | string | Yes | Sub ID. |
+Request Body: ConfigUpsert
+Example Request:
+curl -X POST "https://api.rostro.dev/config/123/main" \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{ "key": "value" }'
 
-## Notes
+DELETE /config/{config_id}/{sub_id}
+Description: Delete config.
+Parameters: Same as POST.
+POST /config
+Description: Upsert configs.
+Request Body: ConfigsUpsert
+DELETE /config
+Description: Delete configs.
+Request Body: ConfigsDelete
+POST /config/fetch
+Description: Fetch configs.
+Request Body: ConfigFetchRequest
+GET /oauth/userinfo
+Description: Fetches information about the user's account (identity, scopes, credits).
+Example Request:
+curl -X GET "https://api.rostro.dev/oauth/userinfo" \
+  -H "Authorization: Bearer <token>"
 
-- **API Version**: 0.5.9
-- **Base URLs**: 
-  - Main API: `https://api.rostro.dev`
-  - OpenAI Mimic: `https://api.rostro.dev/v1`
-  - MCP Server: `https://proto.rostro.dev/mcp`
-- **Terms of Service**: https://rostro.dev/tos
-- **Support Email**: support@rostro.dev
-- All endpoints require authentication unless otherwise specified
-- Most endpoints support pagination using `page` parameter
-- NSFW/NSFL filtering is available on many endpoints
-- The API uses standard REST conventions
-- Rate limiting may apply (not specified in OpenAPI spec)
-- All timestamps should be in ISO 8601 format
-- File uploads use multipart/form-data encoding
+Example Response:
+{
+  "identity": "user-123",
+  "username": "UserOne",
+  "scopes": ["read", "write"],
+  "credits": 100
+}
 
----
+POST /api/media/video/upload
+Description: Upload a video or animation.
+Request Body: Multipart/Form-Data
+| Field | Type | Required | Description |
+|---|---|---|---|
+| file | file | Yes | Video file. |
+Example Request:
+curl -X POST "https://api.rostro.dev/api/media/video/upload" \
+  -H "Authorization: Bearer <token>" \
+  -F "file=@myvideo.mp4"
 
-## Additional Information
+POST /api/favorites/{project_id}
+Description: Favorite a project.
+Parameters:
+| Name | In | Type | Required | Description |
+|---|---|---|---|---|
+| project_id | Path | integer | Yes | Project ID. |
+Example Request:
+curl -X POST "https://api.rostro.dev/api/favorites/172700" \
+  -H "Authorization: Bearer <token>"
 
-For more detailed information about specific schemas, refer to the `components/schemas` section of the OpenAPI specification. Many endpoints share common parameters and response formats, particularly around pagination, filtering, and error handling.
+DELETE /api/favorites/{project_id}
+Description: Unfavorite a project.
+Parameters: Same as POST.
+GET /api/projects/similar/{project_id}/{no_nsfl_enum}/{no_nsfw_enum}
+Description: Get recommended projects for a project.
+Parameters:
+| Name | In | Type | Required | Description |
+|---|---|---|---|---|
+| project_id | Path | integer | Yes | Project ID. |
+| no_nsfl_enum | Path | string | Yes | Boolean String. |
+| no_nsfw_enum | Path | string | Yes | Boolean String. |
+GET /api/favorites
+Description: Get favorited projects.
+Example Request:
+curl -X GET "https://api.rostro.dev/api/favorites" \
+  -H "Authorization: Bearer <token>"
 
-The API is organized into several functional areas:
-- **Projects**: Managing character projects and metadata
-- **Gallery**: Image management and uploads
-- **Lore**: RAG-based lore system for characters
-- **Imagine**: Multimedia asset generation
-- **Chat**: Character chat management
-- **User Account**: User profile and preferences
-- **Search**: Content discovery and filtering
-- **Social**: Following, tags, and timeline features
+POST /api/reports
+Description: Report a project.
+Request Body: ReportSubmission
+| Field | Type | Required | Description |
+|---|---|---|---|
+| project_id | integer | Yes | Project ID. |
+| reason | string | Yes | Reason for report. |
+POST /api/ratings/reports
+Description: Report a rating.
+Request Body: ReportRatingSubmission
+DELETE /api/project/{project_id}
+Description: Delete a project permanently.
+Parameters:
+| Name | In | Type | Required | Description |
+|---|---|---|---|---|
+| project_id | Path | integer | Yes | Project ID. |
+DELETE /api/project/{username}/{pathname}
+Description: Delete a project permanently (by path).
+DELETE /api/project/{namespace}/{username}/{pathname}
+Description: Delete a project permanently (full path).
+GET /api/characters/{project_id}/expressions
+Description: Get expression packs for the character.
+Parameters:
+| Name | In | Type | Required | Description |
+|---|---|---|---|---|
+| project_id | Path | integer | Yes | Project ID. |
+POST /api/characters/{project_id}/expressions
+Description: Upsert an expression pack for the character.
+Request Body: Expressions
+DELETE /api/characters/{project_id}/expressions/{tagname}
+Description: Delete an expression pack for the character.
+GET /api/notifications
+Description: Get user account notifications.
+POST /api/notifications
+Description: Get user account notifications (POST variant).
+Request Body: NotifsQuery
+DELETE /api/notifications
+Description: Dismiss all user account notifications.
+DELETE /api/notifications/{notification_id}
+Description: Dismiss a user account notification.
+DELETE /api/notifications/announcement/{announcement_id}
+Description: Dismiss an announcement for the current user.
+GET /api/badges
+Description: Get all badges.
+GET /api/badges/{badge_id}
+Description: Get a specific badge.
+POST /api/core/chats
+Description: Create a new chat.
+Request Body: NewChatRequest
+| Field | Type | Required | Description |
+|---|---|---|---|
+| characters | array | Yes | List of character IDs/paths. |
+Example Request:
+curl -X POST "https://api.rostro.dev/api/core/chats" \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{ "characters": ["You/CharName"] }'
 
-For integration support or questions, contact support@rostro.dev.
+GET /api/core/chats
+Description: Search (or get all) chats for user.
+Parameters:
+| Name | In | Type | Required | Description |
+|---|---|---|---|---|
+| limit | Query | integer | No | Max chats. |
+| search | Query | string | No | Search term. |
+POST /api/core/chats/import
+Description: Create a new chat from import.
+Request Body: ChatImportRequest
+GET /api/core/chats/{chat_id}/messages/{msgid}
+Description: Get chat message.
+Parameters:
+| Name | In | Type | Required | Description |
+|---|---|---|---|---|
+| chat_id | Path | integer | Yes | Chat ID. |
+| msgid | Path | integer | Yes | Message ID. |
+GET /api/core/chats/{username}/{pathname}/public
+Description: Get all public chats for a character.
+GET /api/core/chats/{chat_id}/public
+Description: Get all public chats for a character by ID.
+DELETE /api/core/chats/{chat_id}
+Description: Delete chat.
+PATCH /api/core/chats/{chat_id}
+Description: Update chat.
+Request Body: UpdateChat
+POST /api/core/chats/bulk/delete
+Description: Delete chats in bulk.
+POST /live/invite
+Description: Make an invite link.
+PATCH /live/permissions
+Description: Change the permissions of a live user.
+POST /live
+Description: Get a new live token.
+POST /api/core/chats/v2/{chat_id}/messages/content
+Description: Get the text of these messages.
+DELETE /api/core/chats/{chat_id}/character/{char_id}
+Description: Remove character from chat.
+POST /api/core/chats/{chat_id}/character/{char_id}
+Description: Add character to chat.
+POST /api/core/chats/{chat_id}/characters
+Description: Add characters to chat.
+POST /api/core/chats/{chat_id}/characters/remove
+Description: Remove characters from chat.
+POST /api/core/chats/{chat_id}/user/{tagname}
+Description: Invite user to chat.
+DELETE /api/core/chats/{chat_id}/user/{user_id}
+Description: Remove user from chat.
+GET /api/core/chats/v2/{chat_id}/metatree
+Description: Get minimized chat tree by id.
+GET /api/core/chats/v2/{chat_id}
+Description: Get chat tree by id.
+POST /api/core/chats/v2/{chat_id}/messages/atomic
+Description: Make a number of operations on messages in an atomic manner.
+GET /api/personas
+Description: Get personas for a user.
+POST /api/personas
+Description: Create a new persona.
+POST /api/personas/{persona_id}
+Description: Update an existing persona.
+DELETE /api/personas/{persona_id}
+Description: Delete an existing persona.
+GET /api/logs/{log_id}/comments
+Description: Get the comments on a log.
+POST /api/logs/{log_id}/comment
+Description: Make or update a comment on a log.
+DELETE /logs/{log_id}/comment/{rid}
+Description: Delete a comment on a log.
+POST /api/logs/{log_id}/react/{rid}
+Description: React to a log.
+DELETE /api/logs/{log_id}/react/{rid}
+Description: Unreact to a log.
+POST /reactions/react/{rid}
+Description: React to a log.
+DELETE /reactions/react/{rid}
+Description: Unreact to a log.
+GET /api/logs/search
+Description: Search (or get all) public logs.
+POST /api/suggestions/tags
+Description: Create a list of suggested tags for a character.
+POST /request/merge
+Description: Use to request that two tags be merged.
+POST /api/core/lorebooks
+Description: Create lorebook.
+PUT /api/core/lorebooks/{project_id}
+Description: Update lorebook.
+POST /api/core/extensions/context
+Description: Get semantically related messages from earlier in the chat.
+POST /api/chats
+Description: Create a new chat, or retrieve latest.
+GET /api/core/chats/{chat_id}/users/{user_id}
+Description: Get user information for this chat.
+POST /presets
+Description: Create preset.
+POST /presets/active/{preset_id}
+Description: Set active preset.
+POST /presets/active
+Description: Get active preset.
+GET /api/account/tokens
+Description: Get user account active tokens for the inference API.
+POST /api/account/tokens
+Description: Create a new token for this account for the inference API.
+POST /account/tokens/projects
+Description: Create a new token for this account for the base API for projects CRUD.
+POST /api/account/tokens/core
+Description: Create a new token for this account for the inference API.
+DELETE /api/account/token/{token_id}
+Description: Revoke a token.
+POST /extensions
+Description: Create extension.
+POST /extension/{extension_id}/files
+Description: Make a number of operations on files in a pseudo-atomic manner.
+POST /minifetch/extension/{extension_id}
+Description: A quick extension fetch.
+POST /minifetch/extensions/{extension_id}
+Description: A quick extensions fetch.
+POST /extension/{extension_id}/upload
+Description: Upload a zip file to extension.
+POST /api/storage/stage/{stage_id}/fetch
+Description: Fetch stage storage (Experimental).
+POST /api/storage/stage/{stage_id}
+Description: Update stage storage (Experimental).
+GET /images/costs
+Description: Get current costs.
+GET /images/mine
+Description: Get all images generated under your account.
+POST /images/inpaint
+Description: Inpaint an image.
+POST /images/removebg_mask
+Description: Remove the background from an image.
+POST /music
+Description: Create a new music piece from a prompt.
+POST /tts
+Description: Create an audio of the submitted transcript.
+GET /voices
+Description: Get my voices.
+DELETE /voices/{voice_id}
+Description: Delete voice.
+POST /voice_clone
+Description: Create or update a voice clone.
+POST /images/text2img
+Description: Create an image from a prompt.
+POST /images/img2img
+Description: Create a new image from a base one and a prompt.
+POST /images/animate
+Description: Create a new animation from a base image.
+POST /video
+Description: Create a new video from a prompt.
+POST /foley
+Description: Create a new sound effect from a prompt.
+POST /images/upscale
+Description: Upscale an image.
+POST /check
+Description: Check on a running task.
+POST /imagine/check
+Description: A unified endpoint for checking on a running generation.
+POST /stt
+Description: STT (Speech to text) endpoint.
+POST /chub/{model}/v1/chat/completions
+Description: OpenAI Mimic API endpoint for chat completions. Model selection overridden by path.
+Parameters:
+| Name | In | Type | Required | Description |
+|---|---|---|---|---|
+| model | Path | string | Yes | Inference Model. |
+Request Body: CompletionCreateParams
+POST /chub/{model}/v1/completions
+Description: OpenAI Mimic API endpoint for completions.
+POST /{model}/v1/completions
+Description: OpenAI Mimic API endpoint for completions.
+POST /v1/completions
+Description: OpenAI Mimic API endpoint for completions.
+POST /{model}/v1/chat/completions
+Description: OpenAI Mimic API endpoint for chat completions.
+GET /chub/{model}/v1/models
+Description: Fetch the list of available models.
+GET /{model}/v1/models
+Description: Fetch the list of available models.
+POST /v1/chat/completions
+Description: OpenAI Mimic API endpoint for chat completions.
+GET /v1/models
+Description: Fetch the list of all available models.
+POST /prompt
+Description: API endpoint for generic completions.
+PATCH /imagine/project/{uuid}
+Description: Update an existing imagine project or image.
+GET /imagine/project/{uuid}
+Description: Get an existing imagine project or image.
+POST /model3d
+Description: Create a new 3D model from a prompt and/or image(s).
+POST /images/expressions
+Description: Create a sprite pack from an image or a prompt.
+POST /live/voice
+Description: Request live voice chat.
+DELETE /live/voice/{chat_id}/{agent_id}
+Description: End live voice chat.
+GET /api/{namespace}/{creator_name}/{project_name}
+Description: Fetch Project.
+GET /api/{space}/{project_id}
+Description: Fetch Character Id.
+GET /api/public/{namespace}/{creator_name}/{project_name}
+Description: Fetch Project (Public).
+GET /api/public/{space}/{project_id}
+Description: Fetch Character Id (Public).
+GET /forks/project/{project_id}
+Description: Get forks for this project.
+POST /api/project/{project_id}/fork/v2
+Description: Fork a character (V2).
+POST /engine/api/apps
+Description: App Create.
+GET /engine/api/apps
+Description: App List.
+DELETE /engine/api/apps/{app_id}
+Description: App Delete.
+GET /engine/api/apps/{app_id}
+Description: App Get.
+POST /engine/api/apps/download
+Description: App Download.
+GET /engine/api/assets
+Description: Assets List.
+POST /engine/api/assets
+Description: Asset Create.
+DELETE /engine/api/assets
+Description: Asset Delete.
+GET /engine/api/assets/{asset_id}
+Description: Asset Get.
+PUT /engine/api/assets/{asset_id}
+Description: Asset Update.
+GET /engine/api/assets/{asset_id}/file/{filename}
+Description: Asset Get File.
+GET /engine/api/assets/{asset_id}/thumbnail/{size}
+Description: Asset Get Thumbnail.
+POST /engine/api/assets/{asset_id}/reimport
+Description: Asset Reimport.
+POST /engine/api/assets/{asset_id}/duplicate
+Description: Asset Duplicate.
+POST /engine/api/assets/paste
+Description: Asset Paste.
+POST /engine/api/checkpoints
+Description: Checkpoint Create.
+GET /engine/api/checkpoints/{checkpoint_id}
+Description: Checkpoint Get.
+POST /engine/api/checkpoints/{checkpoint_id}/restore
+Description: Checkpoint Restore.
+POST /engine/api/checkpoints/{checkpoint_id}/hardreset
+Description: Checkpoint Hard Reset.
+GET /engine/api/entities
+Description: Entities List.
+POST /engine/api/entities
+Description: Entity Create.
+GET /engine/api/entities/{entity_id}
+Description: Entity Get.
+PUT /engine/api/entities/{entity_id}
+Description: Entity Update.
+DELETE /engine/api/entities/{entity_id}
+Description: Entity Delete.
+GET /engine/api/editor/project/{project_id}/branch
+Description: Home Branch.
+GET /engine/api/file
+Description: Home File.
+POST /engine/api/editor/scene/{scene_id}/opened
+Description: Home Scene Opened.
+POST /engine/api/editor/scene/{scene_id}/events
+Description: Home Scene Event.
+POST /engine/api/editor/scene/{scene_id}/tips/{tip}
+Description: Home Scene Tip.
+POST /engine/api/projects
+Description: Project Create.
+PUT /engine/api/projects/{project_id}
+Description: Project Update.
+GET /engine/api/projects/{project_id}
+Description: Project Get.
+DELETE /engine/api/projects/{project_id}
+Description: Project Delete.
+POST /engine/api/projects/import
+Description: Project Import.
+POST /engine/api/projects/{project_id}/export
+Description: Project Export.
+POST /engine/api/projects/{project_id}/unlock
+Description: Project Unlock.
+POST /engine/api/projects/{project_id}/transfer
+Description: Project Transfer.
+POST /engine/api/projects/{project_id}/accept_transfer
+Description: Project Accept Transfer.
+POST /engine/api/projects/{project_id}/decline_transfer
+Description: Project Decline Transfer.
+GET /engine/api/projects/{project_id}/activity
+Description: Project Activity.
+GET /engine/api/projects/{project_id}/collaborators
+Description: Project Collab List.
+POST /engine/api/projects/{project_id}/collaborators
+Description: Project Collab Create.
+PUT /engine/api/projects/{project_id}/collaborators/{collab_id}
+Description: Project Collab Update.
+DELETE /engine/api/projects/{project_id}/collaborators/{collab_id}
+Description: Project Collab Delete.
+POST /engine/api/projects/{project_id}/image
+Description: Project Image.
+GET /engine/api/projects/{project_id}/assets
+Description: Project Assets.
+GET /engine/api/projects/{project_id}/scenes
+Description: Project Scenes.
+GET /engine/api/projects/{project_id}/branches
+Description: Project Branches.
+GET /engine/api/projects/{project_id}/apps
+Description: Project Apps.
+GET /engine/api/projects/{project_id}/repositories
+Description: Project Repo.
+GET /engine/api/projects/{project_id}/repositories/{repo_service}/sourcefiles
+Description: Project Repo Sourcefiles List.
+GET /engine/api/projects/{project_id}/repositories/{repo_service}/sourcefiles/{relative_path}
+Description: Project Repo Sourcefile.
+DELETE /engine/api/projects/{project_id}/repositories/{repo_service}/sourcefiles/{file_name}
+Description: Project Repo Sourcefiles Delete.
+POST /engine/api/scenes
+Description: Scene Create.
+DELETE /engine/api/scenes/{scene_id}
+Description: Scene Delete.
+GET /engine/api/scenes/{scene_id}
+Description: Scene Get.
+GET /engine/api/editor/scene/{scene_id}
+Description: Edit Scene.
+POST /engine/api/upload/start-upload
+Description: Upload Start.
+POST /engine/api/upload/signed-urls
+Description: Upload Urls.
+POST /engine/api/upload/complete-upload
+Description: Upload Complete.
+POST /engine/api/watch
+Description: Watch Create.
+DELETE /engine/api/watch/{watch_id}
+Description: Watch Delete.
+Error Handling
+The API uses standard HTTP status codes.
+| Code | Meaning | Description |
+|---|---|---|
+| 200 | OK | Successful Request. |
+| 400 | Bad Request | The server could not understand the request due to invalid syntax or parameters. |
+| 401 | Unauthorized | Authentication is required and has failed or has not been yet provided. |
+| 403 | Forbidden | The request was valid, but the server is refusing action (e.g. insufficient permissions). |
+| 404 | Not Found | The requested resource could not be found. |
+| 422 | Validation Error | The request was well-formed but was unable to be followed due to semantic errors (e.g. body validation failed). |
+| 500 | Internal Server Error | The server encountered an internal error and was unable to complete your request. |
+
