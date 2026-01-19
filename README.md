@@ -2,6 +2,85 @@
 
 Rostro endpoints provide AI-powered features for multimedia generation, character chat management, and content organization. For use as an OpenAI mimic, use the URL: 'https://api.rostro.dev/v1'. For use as an MCP server, use the URL: 'https://proto.rostro.dev/mcp'.
 
+## Table of Contents
+
+- [Base URL](#base-url)
+- [Authentication](#authentication)
+- [Endpoints](#endpoints)
+  - [Tags & Metadata](#tags--metadata)
+    - [POST /tags](#post-tags)
+    - [POST /api/tags/{project_id}/{tagname}](#post-apitagsproject_idtagname)
+    - [DELETE /api/tags/{project_id}/{tagname}](#delete-apitagsproject_idtagname)
+  - [Projects & Metadata](#projects--metadata)
+    - [PUT /api/project/{project_id}/metadata](#put-apiprojectproject_idmetadata)
+  - [Gallery](#gallery)
+    - [GET /api/gallery](#get-apigallery)
+    - [GET /api/gallery/project/{project_id}](#get-apigalleryprojectproject_id)
+    - [POST /api/gallery/upload](#post-apigalleryupload)
+    - [DELETE /api/gallery/{uuid}](#delete-apigalleryuuid)
+  - [Lore System](#lore-system)
+    - [POST /lore](#post-lore)
+    - [POST /lore/item](#post-loreitem)
+    - [GET /lore/items](#get-loreitems)
+    - [DELETE /lore/{owner_id}/item/{uuid}](#delete-loreowner_iditemuuid)
+  - [Search](#search)
+    - [GET /search](#get-search)
+    - [POST /search](#post-search)
+    - [POST /minisearch](#post-minisearch)
+  - [Imagine (Media Generation)](#imagine-media-generation)
+    - [POST /imagine](#post-imagine)
+    - [POST /imagine/history](#post-imaginehistory)
+    - [POST /imagine/history/delete](#post-imaginehistorydelete)
+  - [Ratings](#ratings)
+    - [GET /api/project/{project_id}/ratings](#get-apiprojectproject_idratings)
+    - [POST /api/project/{project_id}/ratings/disable](#post-apiprojectproject_idratingsdisable)
+    - [POST /api/project/{project_id}/ratings/enable](#post-apiprojectproject_idratingsEnable)
+    - [POST /api/project/{project_id}/rate](#post-apiprojectproject_idrate)
+  - [User Account Management](#user-account-management)
+    - [GET /api/account](#get-apiaccount)
+    - [DELETE /api/account](#delete-apiaccount)
+    - [POST /api/account/block/{block_type}/{name}](#post-apiaccountblockblock_typename)
+    - [DELETE /api/account/block/{block_type}/{name}](#delete-apiaccountblockblock_typename)
+    - [POST /api/account/blacklist](#post-apiaccountblacklist)
+    - [POST /api/account/blacklist/remove](#post-apiaccountblacklistremove)
+    - [POST /api/account/sort/{order}](#post-apiaccountsortorder)
+    - [GET /api/self](#get-apiself)
+  - [Social Features](#social-features)
+    - [DELETE /follow/tag/{tagname}](#delete-followtagtagname)
+    - [POST /follow/tag/{tagname}](#post-followtagtagname)
+    - [DELETE /api/follow/{username}](#delete-apifollowusername)
+    - [POST /api/follow/{username}](#post-apifollowusername)
+    - [POST /api/follows/{username}](#post-apifollowsusername)
+    - [GET /api/follows/{username}](#get-apifollowsusername)
+    - [GET /api/followers/{username}](#get-apifollowersusername)
+    - [GET /api/timeline/v1](#get-apitimelinev1)
+  - [User Profiles](#user-profiles)
+    - [GET /api/users/{username}](#get-apiusersusername)
+    - [GET /api/leaderboard/v1](#get-apileaderboardv1)
+    - [GET /atproto/{username}](#get-atprotousername)
+  - [Character Chat](#character-chat)
+    - [POST /api/core/characters](#post-apicorecharacters)
+    - [DELETE /api/core/characters/link/{username}/{pathname}/lorebook/{project_id}](#delete-apicorecharacterslinkusernamepatnamelorebookproject_id)
+    - [POST /api/core/characters/link/{username}/{pathname}/lorebook/{project_id}](#post-apicorecharacterslinkusernamepatnamelorebookproject_id)
+    - [PUT /api/core/characters/{username}/{pathname}](#put-apicorecharactersusernamepathname)
+  - [User Settings](#user-settings)
+    - [POST /api/self/username](#post-apiselfusername)
+    - [POST /api/check/username](#post-apicheckusername)
+    - [POST /config/{config_id}/{sub_id}](#post-configconfig_idsub_id)
+    - [DELETE /config/{config_id}/{sub_id}](#delete-configconfig_idsub_id)
+    - [POST /config](#post-config)
+    - [DELETE /config](#delete-config)
+  - [Utilities](#utilities)
+    - [POST /api/infer/emotion](#post-apiinferemotion)
+- [Error Handling](#error-handling)
+- [Schemas](#schemas)
+  - [Core Response Schemas](#core-response-schemas)
+  - [Request Schemas](#request-schemas)
+  - [Enum Schemas](#enum-schemas)
+  - [Complex Schemas](#complex-schemas)
+- [Notes](#notes)
+- [Additional Information](#additional-information)
+
 ## Base URL
 
 ```
@@ -32,7 +111,9 @@ CH-API-KEY: <your_api_key>
 
 ## Endpoints
 
-### POST /tags
+### Tags & Metadata
+
+#### POST /tags
 
 **Description**: Get all tags with counts, optionally by namespace.
 
@@ -65,7 +146,9 @@ curl -X POST https://api.rostro.dev/tags \
 
 ---
 
-### PUT /api/project/{project_id}/metadata
+### Projects & Metadata
+
+#### PUT /api/project/{project_id}/metadata
 
 **Description**: Update the metadata for this project.
 
@@ -102,7 +185,9 @@ curl -X PUT https://api.rostro.dev/api/project/172700/metadata \
 
 ---
 
-### GET /api/gallery
+### Gallery
+
+#### GET /api/gallery
 
 **Description**: Fetch the gallery of all images for all projects.
 
@@ -137,7 +222,7 @@ curl -X GET "https://api.rostro.dev/api/gallery?page=1&limit=24&nsfw=true&count=
 
 ---
 
-### GET /api/gallery/project/{project_id}
+#### GET /api/gallery/project/{project_id}
 
 **Description**: Fetch the gallery of images for this project.
 
@@ -171,7 +256,7 @@ curl -X GET "https://api.rostro.dev/api/gallery/project/172700?page=1&limit=24" 
 
 ---
 
-### POST /api/gallery/upload
+#### POST /api/gallery/upload
 
 **Description**: Upload to the gallery of images.
 
@@ -205,7 +290,9 @@ curl -X POST https://api.rostro.dev/api/gallery/upload \
 
 ---
 
-### POST /api/infer/emotion
+### Utilities
+
+#### POST /api/infer/emotion
 
 **Description**: Infer the emotion of a string.
 
@@ -239,7 +326,7 @@ curl -X POST https://api.rostro.dev/api/infer/emotion \
 
 ---
 
-### DELETE /api/gallery/{uuid}
+#### DELETE /api/gallery/{uuid}
 
 **Description**: Delete an image from the gallery.
 
@@ -269,7 +356,7 @@ curl -X DELETE "https://api.rostro.dev/api/gallery/3e41a43b-4ffc-41dd-8ad8-5cb68
 
 ---
 
-### POST /api/tags/{project_id}/{tagname}
+#### POST /api/tags/{project_id}/{tagname}
 
 **Description**: Add a tag to this entity.
 
@@ -299,7 +386,7 @@ curl -X POST https://api.rostro.dev/api/tags/172700/HOT \
 
 ---
 
-### DELETE /api/tags/{project_id}/{tagname}
+#### DELETE /api/tags/{project_id}/{tagname}
 
 **Description**: Remove a tag from this entity.
 
@@ -329,7 +416,9 @@ curl -X DELETE https://api.rostro.dev/api/tags/172700/HOT \
 
 ---
 
-### GET /api/users/{username}
+### User Profiles
+
+#### GET /api/users/{username}
 
 **Description**: Get the profile for this user.
 
@@ -363,7 +452,7 @@ curl -X GET "https://api.rostro.dev/api/users/You?include_projects=true" \
 
 ---
 
-### GET /api/leaderboard/v1
+#### GET /api/leaderboard/v1
 
 **Description**: Get the user leaderboard.
 
@@ -392,7 +481,9 @@ curl -X GET "https://api.rostro.dev/api/leaderboard/v1?order_by=avg_msgs_chat" \
 
 ---
 
-### POST /lore
+### Lore System
+
+#### POST /lore
 
 **Description**: Make a RAG lore request.
 
@@ -425,7 +516,7 @@ curl -X POST https://api.rostro.dev/lore \
 
 ---
 
-### POST /lore/item
+#### POST /lore/item
 
 **Description**: Add an unstructured item.
 
@@ -458,7 +549,7 @@ curl -X POST https://api.rostro.dev/lore/item \
 
 ---
 
-### GET /lore/items
+#### GET /lore/items
 
 **Description**: Get unstructured items for these owners.
 
@@ -491,7 +582,7 @@ curl -X GET https://api.rostro.dev/lore/items \
 
 ---
 
-### DELETE /lore/{owner_id}/item/{uuid}
+#### DELETE /lore/{owner_id}/item/{uuid}
 
 **Description**: Remove an unstructured item.
 
@@ -521,7 +612,9 @@ curl -X DELETE https://api.rostro.dev/lore/2108776/item/1b6c5288-731c-4345-a756-
 
 ---
 
-### GET /search
+### Search
+
+#### GET /search
 
 **Description**: Do Internal Search
 
@@ -594,7 +687,7 @@ curl -X GET "https://api.rostro.dev/search?search=fantasy&page=1&first=40&nsfw=f
 
 ---
 
-### POST /search
+#### POST /search
 
 **Description**: Do Internal Search Bypass
 
@@ -620,7 +713,7 @@ curl -X POST "https://api.rostro.dev/search?search=fantasy&page=1" \
 
 ---
 
-### POST /minisearch
+#### POST /minisearch
 
 **Description**: A quick search just by names.
 
@@ -653,7 +746,9 @@ curl -X POST https://api.rostro.dev/minisearch \
 
 ---
 
-### POST /imagine
+### Imagine (Media Generation)
+
+#### POST /imagine
 
 **Description**: A unified endpoint for multimedia asset generation.
 
@@ -693,7 +788,7 @@ curl -X POST "https://api.rostro.dev/imagine?return_immediate=false" \
 
 ---
 
-### POST /imagine/history
+#### POST /imagine/history
 
 **Description**: A unified endpoint for fetching multimedia asset generation history.
 
@@ -728,7 +823,7 @@ curl -X POST https://api.rostro.dev/imagine/history \
 
 ---
 
-### POST /imagine/history/delete
+#### POST /imagine/history/delete
 
 **Description**: Delete the media with these uuids.
 
@@ -762,7 +857,9 @@ curl -X POST https://api.rostro.dev/imagine/history/delete \
 
 ---
 
-### GET /api/project/{project_id}/ratings
+### Ratings
+
+#### GET /api/project/{project_id}/ratings
 
 **Description**: Get the ratings for this project.
 
@@ -792,7 +889,7 @@ curl -X GET https://api.rostro.dev/api/project/172700/ratings \
 
 ---
 
-### POST /api/project/{project_id}/ratings/disable
+#### POST /api/project/{project_id}/ratings/disable
 
 **Description**: Disable ratings for this project.
 
@@ -821,7 +918,7 @@ curl -X POST https://api.rostro.dev/api/project/172700/ratings/disable \
 
 ---
 
-### POST /api/project/{project_id}/ratings/enable
+#### POST /api/project/{project_id}/ratings/enable
 
 **Description**: Enable ratings for this project.
 
@@ -850,7 +947,7 @@ curl -X POST https://api.rostro.dev/api/project/172700/ratings/enable \
 
 ---
 
-### POST /api/project/{project_id}/rate
+#### POST /api/project/{project_id}/rate
 
 **Description**: Make or update a rating for this project.
 
@@ -887,7 +984,9 @@ curl -X POST https://api.rostro.dev/api/project/172700/rate \
 
 ---
 
-### GET /api/account
+### User Account Management
+
+#### GET /api/account
 
 **Description**: Get user account information.
 
@@ -925,7 +1024,7 @@ curl -X GET "https://api.rostro.dev/api/account?tokens=true&blocks=true" \
 
 ---
 
-### DELETE /api/account
+#### DELETE /api/account
 
 **Description**: Delete this account completely and irreversibly.
 
@@ -950,7 +1049,7 @@ curl -X DELETE https://api.rostro.dev/api/account \
 
 ---
 
-### POST /api/account/block/{block_type}/{name}
+#### POST /api/account/block/{block_type}/{name}
 
 **Description**: Block yourself from viewing these in search.
 
@@ -980,7 +1079,7 @@ curl -X POST https://api.rostro.dev/api/account/block/tag/NSFW \
 
 ---
 
-### DELETE /api/account/block/{block_type}/{name}
+#### DELETE /api/account/block/{block_type}/{name}
 
 **Description**: Unblock yourself from viewing these in search.
 
@@ -1010,7 +1109,7 @@ curl -X DELETE https://api.rostro.dev/api/account/block/tag/NSFW \
 
 ---
 
-### POST /api/account/blacklist
+#### POST /api/account/blacklist
 
 **Description**: Prevent users from commenting specific words/phrases on your pages.
 
@@ -1043,7 +1142,7 @@ curl -X POST https://api.rostro.dev/api/account/blacklist \
 
 ---
 
-### POST /api/account/blacklist/remove
+#### POST /api/account/blacklist/remove
 
 **Description**: Remove a word from your blacklist.
 
@@ -1076,7 +1175,7 @@ curl -X POST https://api.rostro.dev/api/account/blacklist/remove \
 
 ---
 
-### POST /api/account/sort/{order}
+#### POST /api/account/sort/{order}
 
 **Description**: Set a default sort order in search.
 
@@ -1105,7 +1204,7 @@ curl -X POST https://api.rostro.dev/api/account/sort/download_count \
 
 ---
 
-### GET /api/self
+#### GET /api/self
 
 **Description**: Get truncated user account information.
 
@@ -1131,7 +1230,9 @@ curl -X GET https://api.rostro.dev/api/self \
 
 ---
 
-### DELETE /follow/tag/{tagname}
+### Social Features
+
+#### DELETE /follow/tag/{tagname}
 
 **Description**: Unfollow a tag.
 
@@ -1160,7 +1261,7 @@ curl -X DELETE https://api.rostro.dev/follow/tag/Fantasy \
 
 ---
 
-### POST /follow/tag/{tagname}
+#### POST /follow/tag/{tagname}
 
 **Description**: Follow a tag.
 
@@ -1189,7 +1290,7 @@ curl -X POST https://api.rostro.dev/follow/tag/Fantasy \
 
 ---
 
-### DELETE /api/follow/{username}
+#### DELETE /api/follow/{username}
 
 **Description**: Unfollow a username.
 
@@ -1218,7 +1319,7 @@ curl -X DELETE https://api.rostro.dev/api/follow/You \
 
 ---
 
-### POST /api/follow/{username}
+#### POST /api/follow/{username}
 
 **Description**: Follow a username.
 
@@ -1247,7 +1348,7 @@ curl -X POST https://api.rostro.dev/api/follow/You \
 
 ---
 
-### POST /api/follows/{username}
+#### POST /api/follows/{username}
 
 **Description**: Get who a given username follows.
 
@@ -1283,7 +1384,7 @@ curl -X POST "https://api.rostro.dev/api/follows/You?page=1" \
 
 ---
 
-### GET /api/follows/{username}
+#### GET /api/follows/{username}
 
 **Description**: Get who a given username follows.
 
@@ -1309,7 +1410,7 @@ curl -X GET "https://api.rostro.dev/api/follows/You?page=1" \
 
 ---
 
-### GET /api/followers/{username}
+#### GET /api/followers/{username}
 
 **Description**: Get who follows a given username.
 
@@ -1345,7 +1446,7 @@ curl -X GET "https://api.rostro.dev/api/followers/You?page=1" \
 
 ---
 
-### GET /api/timeline/v1
+#### GET /api/timeline/v1
 
 **Description**: Get recent updates from people you follow.
 
@@ -1380,7 +1481,7 @@ curl -X GET "https://api.rostro.dev/api/timeline/v1?page=1" \
 
 ---
 
-### GET /atproto/{username}
+#### GET /atproto/{username}
 
 **Description**: Get the configured atproto for this username for Bluesky.
 
@@ -1408,7 +1509,9 @@ curl -X GET https://api.rostro.dev/atproto/You
 
 ---
 
-### POST /api/core/characters
+### Character Chat
+
+#### POST /api/core/characters
 
 **Description**: Create char
 
@@ -1442,7 +1545,7 @@ curl -X POST https://api.rostro.dev/api/core/characters \
 
 ---
 
-### DELETE /api/core/characters/link/{username}/{pathname}/lorebook/{project_id}
+#### DELETE /api/core/characters/link/{username}/{pathname}/lorebook/{project_id}
 
 **Description**: Remove a linked lorebook for a character.
 
@@ -1473,7 +1576,7 @@ curl -X DELETE https://api.rostro.dev/api/core/characters/link/You/expressions-e
 
 ---
 
-### POST /api/core/characters/link/{username}/{pathname}/lorebook/{project_id}
+#### POST /api/core/characters/link/{username}/{pathname}/lorebook/{project_id}
 
 **Description**: Add a linked lorebook for a character.
 
@@ -1504,7 +1607,7 @@ curl -X POST https://api.rostro.dev/api/core/characters/link/You/expressions-ext
 
 ---
 
-### PUT /api/core/characters/{username}/{pathname}
+#### PUT /api/core/characters/{username}/{pathname}
 
 **Description**: Update char
 
@@ -1542,7 +1645,9 @@ curl -X PUT https://api.rostro.dev/api/core/characters/You/expressions-extension
 
 ---
 
-### POST /api/self/username
+### User Settings
+
+#### POST /api/self/username
 
 **Description**: Attempt to change your username.
 
@@ -1575,7 +1680,7 @@ curl -X POST https://api.rostro.dev/api/self/username \
 
 ---
 
-### POST /api/check/username
+#### POST /api/check/username
 
 **Description**: Check if username is taken.
 
@@ -1607,7 +1712,7 @@ curl -X POST https://api.rostro.dev/api/check/username \
 
 ---
 
-### POST /config/{config_id}/{sub_id}
+#### POST /config/{config_id}/{sub_id}
 
 **Description**: Upsert a config
 
@@ -1645,7 +1750,7 @@ curl -X POST https://api.rostro.dev/config/3242362/sub1 \
 
 ---
 
-### DELETE /config/{config_id}/{sub_id}
+#### DELETE /config/{config_id}/{sub_id}
 
 **Description**: Delete config
 
@@ -1675,7 +1780,7 @@ curl -X DELETE https://api.rostro.dev/config/3242362/sub1 \
 
 ---
 
-### POST /config
+#### POST /config
 
 **Description**: Upsert configs
 
@@ -1708,7 +1813,7 @@ curl -X POST https://api.rostro.dev/config \
 
 ---
 
-### DELETE /config
+#### DELETE /config
 
 **Description**: Delete configs
 
