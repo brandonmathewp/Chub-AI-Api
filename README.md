@@ -1,31 +1,23 @@
-# Rostro API
-
-> Rostro endpoints. For use as an OpenAI mimic, use the URL: `https://api.rostro.dev/v1`. For use as an MCP server, use the URL: `https://proto.rostro.dev/mcp`.
-
-## Base URLs
-
+## Rostro API
+> Rostro endpoints. For use as an OpenAI mimic, use the URL: https://api.rostro.dev/v1. For use as an MCP server, use the URL: https://proto.rostro.dev/mcp.
+> 
+Base URLs
 | Environment | URL |
-| :--- | :--- |
-| **OpenAI Mimic** | `https://api.rostro.dev/v1` |
-| **MCP Server** | `https://proto.rostro.dev/mcp` |
-| **Standard API** | `https://api.rostro.dev` |
-
-## Authentication
-
+|---|---|
+| OpenAI Mimic | https://api.rostro.dev/v1 |
+| MCP Server | https://proto.rostro.dev/mcp |
+| Standard API | https://api.rostro.dev |
+Authentication
 The API authentication is handled via HTTP Headers. You must include one of the following headers in your requests:
+ * Authorization: Standard Bearer token.
+ * CH-API-KEY: Custom header for API keys.
+ * samwise: Internal/Specific token usage.
+Code Snippet:
+# Authorization Header
+curl -H "Authorization: Bearer <your_token>" https://api.rostro.dev/api/account
 
-1.  **Authorization**: Standard Bearer token.
-2.  **CH-API-KEY**: Custom header for API keys.
-3.  **samwise**: Internal/Specific token usage.
-
-### Code Snippets
-
-**Using Bearer Token:**
-```bash
-curl -H "Authorization: Bearer <your_token>" [https://api.rostro.dev/api/account](https://api.rostro.dev/api/account)
-
-Using API Key:
-curl -H "CH-API-KEY: <your_api_key>" [https://api.rostro.dev/api/account](https://api.rostro.dev/api/account)
+# API Key Header
+curl -H "CH-API-KEY: <your_api_key>" https://api.rostro.dev/api/account
 
 Endpoints
 POST /tags
@@ -36,9 +28,12 @@ Request Body:
 | namespace | string | No | Optional namespace to filter tags. |
 | limit | integer | No | Limit the number of tags returned. |
 Example Request:
-curl -X POST "[https://api.rostro.dev/tags](https://api.rostro.dev/tags)" \
+curl -X POST "https://api.rostro.dev/tags" \
   -H "Content-Type: application/json" \
-  -d '{ "namespace": "fantasy", "limit": 20 }'
+  -d '{
+    "namespace": "fantasy",
+    "limit": 20
+  }'
 
 Example Response:
 {
@@ -53,7 +48,7 @@ Description: Update the metadata for this project.
 Parameters:
 | Name | In | Type | Required | Description |
 |---|---|---|---|---|
-| project_id | Path | integer | Yes | Project ID (e.g. 172700). |
+| project_id | Path | integer | Yes | Project ID (e.g., 172700). |
 Request Body:
 | Field | Type | Required | Description |
 |---|---|---|---|
@@ -61,10 +56,13 @@ Request Body:
 | description | string | No | New description. |
 | tags | array | No | List of tags. |
 Example Request:
-curl -X PUT "[https://api.rostro.dev/api/project/172700/metadata](https://api.rostro.dev/api/project/172700/metadata)" \
+curl -X PUT "https://api.rostro.dev/api/project/172700/metadata" \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
-  -d '{ "title": "New Title", "description": "Updated info" }'
+  -d '{
+    "title": "New Title",
+    "description": "Updated info"
+  }'
 
 GET /api/gallery
 Description: Fetch the gallery of all images for all projects.
@@ -76,7 +74,7 @@ Parameters:
 | limit | Query | integer | No | Limit per page (default: 24). |
 | count | Query | boolean | No | Return total count. |
 Example Request:
-curl -X GET "[https://api.rostro.dev/api/gallery?limit=10&page=1](https://api.rostro.dev/api/gallery?limit=10&page=1)" \
+curl -X GET "https://api.rostro.dev/api/gallery?limit=10&page=1" \
   -H "Authorization: Bearer <token>"
 
 Example Response:
@@ -97,7 +95,7 @@ Parameters:
 | limit | Query | integer | No | Limit per page. |
 | count | Query | boolean | No | Return total count. |
 Example Request:
-curl -X GET "[https://api.rostro.dev/api/gallery/project/172700](https://api.rostro.dev/api/gallery/project/172700)" \
+curl -X GET "https://api.rostro.dev/api/gallery/project/172700" \
   -H "Authorization: Bearer <token>"
 
 POST /api/gallery/upload
@@ -109,10 +107,13 @@ Request Body:
 | project_id | integer | Yes | Project ID to attach to. |
 | caption | string | No | Optional caption. |
 Example Request:
-curl -X POST "[https://api.rostro.dev/api/gallery/upload](https://api.rostro.dev/api/gallery/upload)" \
+curl -X POST "https://api.rostro.dev/api/gallery/upload" \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
-  -d '{ "project_id": 172700, "image": "data:image/png;base64,..." }'
+  -d '{
+    "project_id": 172700,
+    "image": "data:image/png;base64,..."
+  }'
 
 Example Response:
 {
@@ -127,7 +128,7 @@ Request Body:
 |---|---|---|---|
 | text | string | Yes | The text to analyze. |
 Example Request:
-curl -X POST "[https://api.rostro.dev/api/infer/emotion](https://api.rostro.dev/api/infer/emotion)" \
+curl -X POST "https://api.rostro.dev/api/infer/emotion" \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{ "text": "I am so happy today!" }'
@@ -146,7 +147,7 @@ Parameters:
 | uuid | Path | string | Yes | Image UUID. |
 | projectId | Query | integer | No | Optional Project ID to dissociate it from. |
 Example Request:
-curl -X DELETE "[https://api.rostro.dev/api/gallery/3e41a43b-4ffc-41dd-8ad8-5cb6846b9160](https://api.rostro.dev/api/gallery/3e41a43b-4ffc-41dd-8ad8-5cb6846b9160)" \
+curl -X DELETE "https://api.rostro.dev/api/gallery/3e41a43b-4ffc-41dd-8ad8-5cb6846b9160" \
   -H "Authorization: Bearer <token>"
 
 POST /api/tags/{project_id}/{tagname}
@@ -157,7 +158,7 @@ Parameters:
 | project_id | Path | integer | Yes | Project ID. |
 | tagname | Path | string | Yes | Tag name. |
 Example Request:
-curl -X POST "[https://api.rostro.dev/api/tags/172700/cool](https://api.rostro.dev/api/tags/172700/cool)" \
+curl -X POST "https://api.rostro.dev/api/tags/172700/cool" \
   -H "Authorization: Bearer <token>"
 
 DELETE /api/tags/{project_id}/{tagname}
@@ -168,7 +169,7 @@ Parameters:
 | project_id | Path | integer | Yes | Project ID. |
 | tagname | Path | string | Yes | Tag name. |
 Example Request:
-curl -X DELETE "[https://api.rostro.dev/api/tags/172700/cool](https://api.rostro.dev/api/tags/172700/cool)" \
+curl -X DELETE "https://api.rostro.dev/api/tags/172700/cool" \
   -H "Authorization: Bearer <token>"
 
 GET /api/users/{username}
@@ -182,7 +183,7 @@ Parameters:
 | exclude_mine | Query | boolean | No | Exclude private projects. |
 | include_projects | Query | boolean | No | Include their projects. |
 Example Request:
-curl -X GET "[https://api.rostro.dev/api/users/You](https://api.rostro.dev/api/users/You)" \
+curl -X GET "https://api.rostro.dev/api/users/You" \
   -H "Authorization: Bearer <token>"
 
 Example Response:
@@ -199,7 +200,7 @@ Parameters:
 |---|---|---|---|---|
 | order_by | Query | string | No | Field to order by (default: avg_msgs_chat). |
 Example Request:
-curl -X GET "[https://api.rostro.dev/api/leaderboard/v1](https://api.rostro.dev/api/leaderboard/v1)" \
+curl -X GET "https://api.rostro.dev/api/leaderboard/v1" \
   -H "Authorization: Bearer <token>"
 
 POST /lore
@@ -210,7 +211,7 @@ Request Body:
 | query | string | Yes | The query string. |
 | limit | integer | No | Max results. |
 Example Request:
-curl -X POST "[https://api.rostro.dev/lore](https://api.rostro.dev/lore)" \
+curl -X POST "https://api.rostro.dev/lore" \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{ "query": "history of kingdom" }'
@@ -222,14 +223,13 @@ Example Response:
 
 POST /lore/item
 Description: Add an unstructured item.
-Request Body:
-Multipart Form Data
+Request Body: (Multipart/Form-Data)
 | Field | Type | Required | Description |
 |---|---|---|---|
 | file | file | Yes | File or text content. |
 | metadata | string | No | JSON metadata. |
 Example Request:
-curl -X POST "[https://api.rostro.dev/lore/item](https://api.rostro.dev/lore/item)" \
+curl -X POST "https://api.rostro.dev/lore/item" \
   -H "Authorization: Bearer <token>" \
   -F "file=@lore.txt"
 
@@ -240,7 +240,7 @@ Request Body:
 |---|---|---|---|
 | owner_ids | array | Yes | List of owner IDs. |
 Example Request:
-curl -X GET "[https://api.rostro.dev/lore/items](https://api.rostro.dev/lore/items)" \
+curl -X GET "https://api.rostro.dev/lore/items" \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{ "owner_ids": [123] }'
@@ -253,7 +253,7 @@ Parameters:
 | uuid | Path | string | Yes | Item UUID. |
 | owner_id | Path | integer | Yes | Owner ID. |
 Example Request:
-curl -X DELETE "[https://api.rostro.dev/lore/123/item/abc-uuid](https://api.rostro.dev/lore/123/item/abc-uuid)" \
+curl -X DELETE "https://api.rostro.dev/lore/123/item/abc-uuid" \
   -H "Authorization: Bearer <token>"
 
 GET /search
@@ -270,14 +270,14 @@ Parameters:
 | nsfw | Query | boolean | No | Include NSFW. |
 | page | Query | integer | No | Page number. |
 Example Request:
-curl -X GET "[https://api.rostro.dev/search?search=dragon&sort=download_count](https://api.rostro.dev/search?search=dragon&sort=download_count)" \
+curl -X GET "https://api.rostro.dev/search?search=dragon&sort=download_count" \
   -H "Authorization: Bearer <token>"
 
 POST /search
 Description: Do Internal Search Bypass (Post method).
 Parameters: Same as GET /search.
 Example Request:
-curl -X POST "[https://api.rostro.dev/search?search=dragon](https://api.rostro.dev/search?search=dragon)" \
+curl -X POST "https://api.rostro.dev/search?search=dragon" \
   -H "Authorization: Bearer <token>"
 
 POST /minisearch
@@ -287,7 +287,7 @@ Request Body:
 |---|---|---|---|
 | name | string | Yes | Name to search. |
 Example Request:
-curl -X POST "[https://api.rostro.dev/minisearch](https://api.rostro.dev/minisearch)" \
+curl -X POST "https://api.rostro.dev/minisearch" \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{ "name": "Gandalf" }'
@@ -307,15 +307,18 @@ Request Body:
 | height | integer | No | Canvas height. |
 | model | string | No | Model name. |
 Example Request:
-curl -X POST "[https://api.rostro.dev/imagine](https://api.rostro.dev/imagine)" \
+curl -X POST "https://api.rostro.dev/imagine" \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
-  -d '{ "prompt": "cyberpunk city", "generation_type": "text_to_image" }'
+  -d '{
+    "prompt": "cyberpunk city",
+    "generation_type": "text_to_image"
+  }'
 
 Example Response:
 {
   "generation_uuid": "uuid",
-  "primary_media_url": "[https://cdn.url/img.png](https://cdn.url/img.png)",
+  "primary_media_url": "https://cdn.url/img.png",
   "is_done": true
 }
 
@@ -327,7 +330,7 @@ Request Body:
 | first | integer | No | Number of results (default: 10). |
 | generated_only | boolean | No | Only return generated images. |
 Example Request:
-curl -X POST "[https://api.rostro.dev/imagine/history](https://api.rostro.dev/imagine/history)" \
+curl -X POST "https://api.rostro.dev/imagine/history" \
   -H "Authorization: Bearer <token>" \
   -d '{ "first": 5 }'
 
@@ -338,7 +341,7 @@ Request Body:
 |---|---|---|---|
 | uuids | array | No | List of UUID strings. |
 Example Request:
-curl -X POST "[https://api.rostro.dev/imagine/history/delete](https://api.rostro.dev/imagine/history/delete)" \
+curl -X POST "https://api.rostro.dev/imagine/history/delete" \
   -H "Authorization: Bearer <token>" \
   -d '{ "uuids": ["uuid-1"] }'
 
@@ -349,7 +352,7 @@ Parameters:
 |---|---|---|---|---|
 | project_id | Path | integer | Yes | Project ID. |
 Example Request:
-curl -X GET "[https://api.rostro.dev/api/project/172700/ratings](https://api.rostro.dev/api/project/172700/ratings)" \
+curl -X GET "https://api.rostro.dev/api/project/172700/ratings" \
   -H "Authorization: Bearer <token>"
 
 POST /api/project/{project_id}/ratings/disable
@@ -359,7 +362,7 @@ Parameters:
 |---|---|---|---|---|
 | project_id | Path | integer | Yes | Project ID. |
 Example Request:
-curl -X POST "[https://api.rostro.dev/api/project/172700/ratings/disable](https://api.rostro.dev/api/project/172700/ratings/disable)" \
+curl -X POST "https://api.rostro.dev/api/project/172700/ratings/disable" \
   -H "Authorization: Bearer <token>"
 
 POST /api/project/{project_id}/ratings/enable
@@ -369,7 +372,7 @@ Parameters:
 |---|---|---|---|---|
 | project_id | Path | integer | Yes | Project ID. |
 Example Request:
-curl -X POST "[https://api.rostro.dev/api/project/172700/ratings/enable](https://api.rostro.dev/api/project/172700/ratings/enable)" \
+curl -X POST "https://api.rostro.dev/api/project/172700/ratings/enable" \
   -H "Authorization: Bearer <token>"
 
 POST /api/project/{project_id}/rate
@@ -384,7 +387,7 @@ Request Body:
 | rating | integer | Yes | Rating value (1-5). |
 | comment | string | No | Review comment. |
 Example Request:
-curl -X POST "[https://api.rostro.dev/api/project/172700/rate](https://api.rostro.dev/api/project/172700/rate)" \
+curl -X POST "https://api.rostro.dev/api/project/172700/rate" \
   -H "Authorization: Bearer <token>" \
   -d '{ "rating": 5, "comment": "Good!" }'
 
@@ -396,13 +399,13 @@ Parameters:
 | tokens | Query | boolean | No | Return token info. |
 | blocks | Query | boolean | No | Return block info. |
 Example Request:
-curl -X GET "[https://api.rostro.dev/api/account](https://api.rostro.dev/api/account)" \
+curl -X GET "https://api.rostro.dev/api/account" \
   -H "Authorization: Bearer <token>"
 
 DELETE /api/account
 Description: Delete this account completely and irreversibly.
 Example Request:
-curl -X DELETE "[https://api.rostro.dev/api/account](https://api.rostro.dev/api/account)" \
+curl -X DELETE "https://api.rostro.dev/api/account" \
   -H "Authorization: Bearer <token>"
 
 POST /api/account/block/{block_type}/{name}
@@ -413,14 +416,14 @@ Parameters:
 | block_type | Path | string | Yes | e.g. user. |
 | name | Path | string | Yes | Name to block. |
 Example Request:
-curl -X POST "[https://api.rostro.dev/api/account/block/user/BadUser](https://api.rostro.dev/api/account/block/user/BadUser)" \
+curl -X POST "https://api.rostro.dev/api/account/block/user/BadUser" \
   -H "Authorization: Bearer <token>"
 
 DELETE /api/account/block/{block_type}/{name}
 Description: Unblock yourself from viewing these in search.
 Parameters: Same as POST.
 Example Request:
-curl -X DELETE "[https://api.rostro.dev/api/account/block/user/BadUser](https://api.rostro.dev/api/account/block/user/BadUser)" \
+curl -X DELETE "https://api.rostro.dev/api/account/block/user/BadUser" \
   -H "Authorization: Bearer <token>"
 
 POST /api/account/blacklist
@@ -430,7 +433,7 @@ Request Body:
 |---|---|---|---|
 | word | string | Yes | The word to blacklist. |
 Example Request:
-curl -X POST "[https://api.rostro.dev/api/account/blacklist](https://api.rostro.dev/api/account/blacklist)" \
+curl -X POST "https://api.rostro.dev/api/account/blacklist" \
   -H "Authorization: Bearer <token>" \
   -d '{ "word": "spam" }'
 
@@ -438,7 +441,7 @@ POST /api/account/blacklist/remove
 Description: Remove a word from your blacklist.
 Request Body: Same as above.
 Example Request:
-curl -X POST "[https://api.rostro.dev/api/account/blacklist/remove](https://api.rostro.dev/api/account/blacklist/remove)" \
+curl -X POST "https://api.rostro.dev/api/account/blacklist/remove" \
   -H "Authorization: Bearer <token>" \
   -d '{ "word": "spam" }'
 
@@ -449,13 +452,13 @@ Parameters:
 |---|---|---|---|---|
 | order | Path | string | Yes | Sort enum. |
 Example Request:
-curl -X POST "[https://api.rostro.dev/api/account/sort/download_count](https://api.rostro.dev/api/account/sort/download_count)" \
+curl -X POST "https://api.rostro.dev/api/account/sort/download_count" \
   -H "Authorization: Bearer <token>"
 
 GET /api/self
 Description: Get truncated user account information.
 Example Request:
-curl -X GET "[https://api.rostro.dev/api/self](https://api.rostro.dev/api/self)" \
+curl -X GET "https://api.rostro.dev/api/self" \
   -H "Authorization: Bearer <token>"
 
 POST /follow/tag/{tagname}
@@ -465,14 +468,14 @@ Parameters:
 |---|---|---|---|---|
 | tagname | Path | string | Yes | Tag name. |
 Example Request:
-curl -X POST "[https://api.rostro.dev/follow/tag/anime](https://api.rostro.dev/follow/tag/anime)" \
+curl -X POST "https://api.rostro.dev/follow/tag/anime" \
   -H "Authorization: Bearer <token>"
 
 DELETE /follow/tag/{tagname}
 Description: Unfollow a tag.
 Parameters: Same as POST.
 Example Request:
-curl -X DELETE "[https://api.rostro.dev/follow/tag/anime](https://api.rostro.dev/follow/tag/anime)" \
+curl -X DELETE "https://api.rostro.dev/follow/tag/anime" \
   -H "Authorization: Bearer <token>"
 
 POST /api/follow/{username}
@@ -482,14 +485,14 @@ Parameters:
 |---|---|---|---|---|
 | username | Path | string | Yes | Username. |
 Example Request:
-curl -X POST "[https://api.rostro.dev/api/follow/User1](https://api.rostro.dev/api/follow/User1)" \
+curl -X POST "https://api.rostro.dev/api/follow/User1" \
   -H "Authorization: Bearer <token>"
 
 DELETE /api/follow/{username}
 Description: Unfollow a username.
 Parameters: Same as POST.
 Example Request:
-curl -X DELETE "[https://api.rostro.dev/api/follow/User1](https://api.rostro.dev/api/follow/User1)" \
+curl -X DELETE "https://api.rostro.dev/api/follow/User1" \
   -H "Authorization: Bearer <token>"
 
 POST /api/follows/{username}
@@ -500,7 +503,7 @@ Parameters:
 | username | Path | string | Yes | Username. |
 | page | Query | integer | No | Page number. |
 Example Request:
-curl -X POST "[https://api.rostro.dev/api/follows/You?page=1](https://api.rostro.dev/api/follows/You?page=1)" \
+curl -X POST "https://api.rostro.dev/api/follows/You?page=1" \
   -H "Authorization: Bearer <token>"
 
 GET /api/follows/{username}
@@ -514,7 +517,7 @@ Parameters:
 | username | Path | string | Yes | Username. |
 | page | Query | integer | No | Page number. |
 Example Request:
-curl -X GET "[https://api.rostro.dev/api/followers/You?page=1](https://api.rostro.dev/api/followers/You?page=1)" \
+curl -X GET "https://api.rostro.dev/api/followers/You?page=1" \
   -H "Authorization: Bearer <token>"
 
 GET /api/timeline/v1
@@ -524,7 +527,7 @@ Parameters:
 |---|---|---|---|---|
 | page | Query | integer | No | Page number. |
 Example Request:
-curl -X GET "[https://api.rostro.dev/api/timeline/v1](https://api.rostro.dev/api/timeline/v1)" \
+curl -X GET "https://api.rostro.dev/api/timeline/v1" \
   -H "Authorization: Bearer <token>"
 
 GET /atproto/{username}
@@ -534,7 +537,7 @@ Parameters:
 |---|---|---|---|---|
 | username | Path | string | Yes | Username. |
 Example Request:
-curl -X GET "[https://api.rostro.dev/atproto/You](https://api.rostro.dev/atproto/You)"
+curl -X GET "https://api.rostro.dev/atproto/You"
 
 POST /api/core/characters
 Description: Create char.
@@ -544,7 +547,7 @@ Request Body:
 | name | string | Yes | Character name. |
 | description | string | Yes | Description. |
 Example Request:
-curl -X POST "[https://api.rostro.dev/api/core/characters](https://api.rostro.dev/api/core/characters)" \
+curl -X POST "https://api.rostro.dev/api/core/characters" \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{ "name": "Hero", "description": "A brave hero." }'
@@ -558,7 +561,7 @@ Parameters:
 | pathname | Path | string | Yes | Character Slug. |
 | project_id | Path | integer | Yes | Lorebook Project ID. |
 Example Request:
-curl -X POST "[https://api.rostro.dev/api/core/characters/link/You/char/lorebook/123](https://api.rostro.dev/api/core/characters/link/You/char/lorebook/123)" \
+curl -X POST "https://api.rostro.dev/api/core/characters/link/You/char/lorebook/123" \
   -H "Authorization: Bearer <token>"
 
 DELETE /api/core/characters/link/{username}/{pathname}/lorebook/{project_id}
@@ -577,7 +580,7 @@ Request Body:
 | name | string | No | New name. |
 | description | string | No | New description. |
 Example Request:
-curl -X PUT "[https://api.rostro.dev/api/core/characters/You/char](https://api.rostro.dev/api/core/characters/You/char)" \
+curl -X PUT "https://api.rostro.dev/api/core/characters/You/char" \
   -H "Authorization: Bearer <token>" \
   -d '{ "name": "Super Hero" }'
 
@@ -588,7 +591,7 @@ Request Body:
 |---|---|---|---|
 | new_username | string | Yes | Requested username. |
 Example Request:
-curl -X POST "[https://api.rostro.dev/api/self/username](https://api.rostro.dev/api/self/username)" \
+curl -X POST "https://api.rostro.dev/api/self/username" \
   -H "Authorization: Bearer <token>" \
   -d '{ "new_username": "NewMe" }'
 
@@ -596,7 +599,7 @@ POST /api/check/username
 Description: Check if username is taken.
 Request Body: Same as above.
 Example Request:
-curl -X POST "[https://api.rostro.dev/api/check/username](https://api.rostro.dev/api/check/username)" \
+curl -X POST "https://api.rostro.dev/api/check/username" \
   -d '{ "new_username": "NewMe" }'
 
 POST /config/{config_id}/{sub_id}
@@ -611,7 +614,7 @@ Request Body:
 |---|---|---|---|
 | value | object | Yes | Arbitrary JSON config value. |
 Example Request:
-curl -X POST "[https://api.rostro.dev/config/user/settings](https://api.rostro.dev/config/user/settings)" \
+curl -X POST "https://api.rostro.dev/config/user/settings" \
   -H "Authorization: Bearer <token>" \
   -d '{ "value": { "theme": "dark" } }'
 
@@ -631,7 +634,7 @@ JSON object with fetch criteria.
 GET /oauth/userinfo
 Description: Fetches information about the user's account.
 Example Request:
-curl -X GET "[https://api.rostro.dev/oauth/userinfo](https://api.rostro.dev/oauth/userinfo)" \
+curl -X GET "https://api.rostro.dev/oauth/userinfo" \
   -H "Authorization: Bearer <token>"
 
 Example Response:
@@ -643,13 +646,12 @@ Example Response:
 
 POST /api/media/video/upload
 Description: Upload a video or animation.
-Request Body:
-Multipart Form Data
+Request Body: (Multipart/Form-Data)
 | Field | Type | Required | Description |
 |---|---|---|---|
 | file | file | Yes | Video file. |
 Example Request:
-curl -X POST "[https://api.rostro.dev/api/media/video/upload](https://api.rostro.dev/api/media/video/upload)" \
+curl -X POST "https://api.rostro.dev/api/media/video/upload" \
   -H "Authorization: Bearer <token>" \
   -F "file=@video.mp4"
 
@@ -660,7 +662,7 @@ Parameters:
 |---|---|---|---|---|
 | project_id | Path | integer | Yes | Project ID. |
 Example Request:
-curl -X POST "[https://api.rostro.dev/api/favorites/172700](https://api.rostro.dev/api/favorites/172700)" \
+curl -X POST "https://api.rostro.dev/api/favorites/172700" \
   -H "Authorization: Bearer <token>"
 
 DELETE /api/favorites/{project_id}
@@ -677,7 +679,7 @@ Parameters:
 GET /api/favorites
 Description: Get favorited projects.
 Example Request:
-curl -X GET "[https://api.rostro.dev/api/favorites](https://api.rostro.dev/api/favorites)" \
+curl -X GET "https://api.rostro.dev/api/favorites" \
   -H "Authorization: Bearer <token>"
 
 POST /api/reports
@@ -741,7 +743,7 @@ Request Body:
 |---|---|---|---|
 | characters | array | Yes | List of character IDs. |
 Example Request:
-curl -X POST "[https://api.rostro.dev/api/core/chats](https://api.rostro.dev/api/core/chats)" \
+curl -X POST "https://api.rostro.dev/api/core/chats" \
   -H "Authorization: Bearer <token>" \
   -d '{ "characters": ["You/Char1"] }'
 
@@ -909,7 +911,7 @@ Parameters:
 | model | Path | string | Yes | Inference model. |
 Request Body: CompletionCreateParams
 Example Request:
-curl -X POST "[https://api.rostro.dev/chub/gpt-4/v1/chat/completions](https://api.rostro.dev/chub/gpt-4/v1/chat/completions)" \
+curl -X POST "https://api.rostro.dev/chub/gpt-4/v1/chat/completions" \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{ "messages": [{"role": "user", "content": "Hi"}], "stream": false }'
@@ -963,7 +965,7 @@ Request Body:
 |---|---|---|---|
 | (Any) | object | Yes | Arbitrary app data. |
 Example Request:
-curl -X POST "[https://api.rostro.dev/engine/api/apps](https://api.rostro.dev/engine/api/apps)" \
+curl -X POST "https://api.rostro.dev/engine/api/apps" \
   -H "Authorization: Bearer <token>" \
   -d '{ "name": "MyApp" }'
 
@@ -974,7 +976,7 @@ Parameters:
 |---|---|---|---|---|
 | tags | Query | string | No | Filter by tags. |
 Example Request:
-curl -X GET "[https://api.rostro.dev/engine/api/apps](https://api.rostro.dev/engine/api/apps)" \
+curl -X GET "https://api.rostro.dev/engine/api/apps" \
   -H "Authorization: Bearer <token>"
 
 DELETE /engine/api/apps/{app_id}
@@ -984,7 +986,7 @@ Parameters:
 |---|---|---|---|---|
 | app_id | Path | string | Yes | App ID. |
 Example Request:
-curl -X DELETE "[https://api.rostro.dev/engine/api/apps/app-1](https://api.rostro.dev/engine/api/apps/app-1)" \
+curl -X DELETE "https://api.rostro.dev/engine/api/apps/app-1" \
   -H "Authorization: Bearer <token>"
 
 GET /engine/api/apps/{app_id}
@@ -1012,19 +1014,18 @@ Parameters:
 | limit | Query | integer | No | Pagination limit. |
 | tags | Query | string | No | Tags filter. |
 Example Request:
-curl -X GET "[https://api.rostro.dev/engine/api/assets?limit=10](https://api.rostro.dev/engine/api/assets?limit=10)" \
+curl -X GET "https://api.rostro.dev/engine/api/assets?limit=10" \
   -H "Authorization: Bearer <token>"
 
 POST /engine/api/assets
 Description: Asset Create.
-Request Body:
-Multipart Form Data
+Request Body: (Multipart/Form-Data)
 | Field | Type | Required | Description |
 |---|---|---|---|
 | file | file | Yes | Asset file. |
 | metadata | string | No | JSON metadata. |
 Example Request:
-curl -X POST "[https://api.rostro.dev/engine/api/assets](https://api.rostro.dev/engine/api/assets)" \
+curl -X POST "https://api.rostro.dev/engine/api/assets" \
   -H "Authorization: Bearer <token>" \
   -F "file=@image.png"
 
@@ -1039,7 +1040,7 @@ Request Body:
 |---|---|---|---|
 | assets | array | Yes | List of asset IDs (strings). |
 Example Request:
-curl -X DELETE "[https://api.rostro.dev/engine/api/assets](https://api.rostro.dev/engine/api/assets)" \
+curl -X DELETE "https://api.rostro.dev/engine/api/assets" \
   -H "Authorization: Bearer <token>" \
   -d '["asset-1", "asset-2"]'
 
@@ -1055,8 +1056,7 @@ Parameters:
 | Name | In | Type | Required | Description |
 |---|---|---|---|---|
 | asset_id | Path | string | Yes | Asset ID. |
-Request Body:
-Multipart Form Data
+Request Body: (Multipart/Form-Data)
 | Field | Type | Required | Description |
 |---|---|---|---|
 | file | file | No | New file content. |
@@ -1111,7 +1111,7 @@ Parameters:
 |---|---|---|---|---|
 | url | Query | string | Yes | File URL. |
 Example Request:
-curl -X GET "[https://api.rostro.dev/engine/api/file?url=file:///](https://api.rostro.dev/engine/api/file?url=file:///)..." \
+curl -X GET "https://api.rostro.dev/engine/api/file?url=file:///..." \
   -H "Authorization: Bearer <token>"
 
 POST /engine/api/editor/scene/{scene_id}/opened
@@ -1131,7 +1131,7 @@ Request Body:
 |---|---|---|---|
 | (Any) | object | Yes | Event properties. |
 Example Request:
-curl -X POST "[https://api.rostro.dev/engine/api/editor/scene/sc-1/events](https://api.rostro.dev/engine/api/editor/scene/sc-1/events)" \
+curl -X POST "https://api.rostro.dev/engine/api/editor/scene/sc-1/events" \
   -H "Authorization: Bearer <token>" \
   -d '{ "type": "click", "timestamp": 12345 }'
 
@@ -1218,5 +1218,4 @@ Error Handling
 | 404 | Not Found | Resource or endpoint does not exist. |
 | 422 | Validation Error | Request body failed schema validation. |
 | 500 | Internal Server Error | Server failed to process the request. |
-
 
